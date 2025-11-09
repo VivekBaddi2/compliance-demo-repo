@@ -1,16 +1,16 @@
 import express from "express";
 import {
   createSheet,
-  findAll,
-  update,
+  getSheets,
   deleteSheet,
+  updateCell
 } from "../controllers/sheetController.js";
 
-const sheetRouter = express.Router();
+const router = express.Router();
 
-sheetRouter.route("/createSheet").post(createSheet);
-sheetRouter.route("/findAll").get(findAll);
-sheetRouter.route("/update").post(update);
-sheetRouter.route("/deleteSheet/:id").delete(deleteSheet);
+router.post("/create", createSheet);
+router.get("/company/:companyId", getSheets);
+router.put("/update/:id", updateCell);
+router.delete("/delete/:id", deleteSheet);
 
-export default sheetRouter;
+export default router;

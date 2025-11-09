@@ -1,15 +1,20 @@
 import mongoose from "mongoose";
 
-const sheetSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-  },
-  data: {
-    type: Object, // will hold JSON grid data
-    required: true,
-  },
+const cellSchema = new mongoose.Schema({
+  row: { type: String, required: true },
+  column: { type: String, required: true },
+  value: { type: String, default: "" }
+});
 
-} , { timestamps: true });
+const complianceSheetSchema = new mongoose.Schema(
+  {
+    sheetType: { type: String, required: true }, // now fully dynamic
+    company: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin", required: true },
+    cells: [cellSchema],
+  },
+  { timestamps: true }
+);
 
-export default mongoose.model("Sheet", sheetSchema);
+const ComplianceSheet = mongoose.model("ComplianceSheet", complianceSheetSchema);
+export default ComplianceSheet;
