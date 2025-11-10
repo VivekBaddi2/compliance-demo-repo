@@ -105,37 +105,26 @@ export const deleteSuperAdmin = asynchandler(async (req, res) => {
   }
 });
 
-// Login Super Admin
+
 export const loginSuperAdmin = asynchandler(async (req, res) => {
-  try {
-    const { username, password } = req.body;
+  const { username, password } = req.body;
 
-    const admin = await SuperAdmin.findOne({ username });
-    if (!admin) {
-      return res.status(404).json({
-        success: false,
-        msg: "Super Admin not found",
-      });
-    }
-
-    const isPasswordValid = await admin.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        msg: "Invalid password",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      msg: "Login successful",
-      data: admin,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      msg: "Internal Server Error",
-    });
+  const superAdmin = await SuperAdmin.findOne({ username });
+  if (!superAdmin) {
+    return res.status(404).json({ message: "Super admin not found" });
   }
+
+  const isPasswordValid = await superAdmin.comparePassword(password);
+  if (!isPasswordValid) {
+    return res.status(401).json({ message: "Invalid password" });
+  }
+
+  res.status(200).json({
+    message: "Login successful",
+    superAdmin: {
+      _id: superAdmin._id,
+      username: superAdmin.username,
+    },
+  });
 });
+

@@ -19,14 +19,16 @@ export const createSheet = asyncHandler(async (req, res) => {
   res.status(201).json({ message: "Compliance sheet created", sheet });
 });
 
-// get all sheets for an admin/company
 export const getSheets = asyncHandler(async (req, res) => {
   const { companyId } = req.params;
   const sheets = await ComplianceSheet.find({ company: companyId })
     .populate("company", "username")
     .populate("createdBy", "username");
 
-  res.status(200).json(sheets);
+  res.status(200).json({
+    success: true,
+    data: sheets,
+  });
 });
 
 // update or add a single cell
@@ -65,4 +67,37 @@ export const deleteSheet = asyncHandler(async (req, res) => {
 
   await sheet.deleteOne();
   res.status(200).json({ message: "Sheet deleted successfully" });
+});
+
+// GET /api/sheet/company/:companyId/:sheetType
+export const getSheetByType = asyncHandler(async (req, res) => {
+  const { companyId, sheetType } = req.params;
+  const sheet = await ComplianceSheet.findOne({ company: companyId, sheetType })
+    .populate("company", "username")
+    .populate("createdBy", "username");
+
+  if (!sheet) return res.status(404).json({ success: false, message: "Sheet not found" });
+
+  res.status(200).json({ success: true, data: sheet });
+});
+
+// PUT /api/sheet/replace/:id
+export const replaceSheet = asyncHandler(async (req, res) => {
+  const { id } = req.params; // sheet id
+  const { cells } = req.body; // full array of cells: [{row, column, value}, ...]
+
+  const sheet = await ComplianceSheet.findById(id);
+  if (!sheet) {
+    return res.status(404).json({ success: false, message: "Sheet not found" });
+  }
+
+  // replace cells automically
+  sheet.cells = Array.isArray(cells) ? cells : [];
+  await sheet.save();
+
+  const updated = await ComplianceSheet.findById(id)
+    .populate("company", "username")
+    .populate("createdBy", "username");
+
+  res.status(200).json({ success: true, message: "Sheet replaced", data: updated });
 });

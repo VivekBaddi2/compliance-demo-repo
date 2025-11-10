@@ -39,3 +39,23 @@ export const deleteAdmin = asyncHandler(async (req, res) => {
   await admin.deleteOne();
   res.status(200).json({ message: "Admin deleted successfully" });
 });
+
+// Admin login
+export const loginAdmin = asyncHandler(async (req, res) => {
+  const { username, password } = req.body;
+
+  const admin = await Admin.findOne({ username });
+  if (!admin) {
+    return res.status(404).json({ message: "Admin not found" });
+  }
+
+  const isPasswordValid = await admin.matchPassword(password);
+  if (!isPasswordValid) {
+    return res.status(401).json({ message: "Invalid password" });
+  }
+
+  res.status(200).json({
+    message: "Login successful",
+    admin,
+  });
+});
