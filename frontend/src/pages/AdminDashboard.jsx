@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -9,20 +10,19 @@ export default function AdminDashboard() {
   const [error, setError] = useState("");
   const [admin, setAdmin] = useState(null);
 
+  // Fetch admin from localStorage
   useEffect(() => {
     try {
       const data = JSON.parse(localStorage.getItem("admin"));
-      if (data && data._id) {
-        setAdmin(data);
-      } else {
-        navigate("/admin/login");
-      }
+      if (data && data._id) setAdmin(data);
+      else navigate("/admin/login");
     } catch {
       localStorage.removeItem("admin");
       navigate("/admin/login");
     }
   }, [navigate]);
 
+  // Fetch assigned companies
   const fetchCompanies = async () => {
     if (!admin?._id) return;
     try {
@@ -39,15 +39,28 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("admin");
-    localStorage.removeItem("company");
+  useEffect(() => {
+    if (admin?._id) fetchCompanies();
+  }, [admin]);
 
-    // ✅ small delay ensures localStorage clears before redirect
-    setTimeout(() => {
-      navigate("/");
-      window.location.reload(); // ✅ completely resets React state
-    }, 50);
+  // Logout with SweetAlert confirmation
+  const handleLogout = () => {
+    Swal.fire({
+      title: "Logout?",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, logout!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("admin");
+        localStorage.removeItem("company");
+        navigate("/");
+        window.location.reload();
+      }
+    });
   };
 
   const handleCompanyLogin = (company) => {
@@ -55,13 +68,10 @@ export default function AdminDashboard() {
     navigate("/company/login");
   };
 
-  useEffect(() => {
-    if (admin?._id) fetchCompanies();
-  }, [admin]);
-
   return (
     <div className="min-h-screen p-8 bg-gray-50">
-      <div className="flex justify-between items-center mb-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
         <button
           onClick={handleLogout}
@@ -71,41 +81,41 @@ export default function AdminDashboard() {
         </button>
       </div>
 
+      {/* Assigned Companies */}
       <div className="p-6 bg-white rounded-xl shadow-md">
-        <h2 className="text-xl font-semibold mb-4 text-gray-700">
-          Your Companies
+        <h2 className="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">
+          Your Assigned Companies
         </h2>
 
         {loading ? (
-          <p>Loading...</p>
+          <p className="text-gray-500">Loading...</p>
         ) : error ? (
           <p className="text-red-600">{error}</p>
         ) : companies.length === 0 ? (
-          <p className="text-gray-500">No companies found</p>
+          <p className="text-gray-500">No companies assigned yet.</p>
         ) : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border-b p-3 text-left">Company Username</th>
-                <th className="border-b p-3 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {companies.map((company) => (
-                <tr key={company._id} className="hover:bg-gray-50">
-                  <td className="border-b p-3">{company.username}</td>
-                  <td className="border-b p-3">
-                    <button
-                      onClick={() => handleCompanyLogin(company)}
-                      className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 active:scale-95 transition"
-                    >
-                      Login
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {companies.map((company) => (
+              <div
+                key={company._id}
+                className="p-4 bg-blue-50 rounded-lg shadow hover:shadow-lg transition relative"
+              >
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                  {company.username}
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {/* Optionally, add more info here */}
+                  Assigned to you
+                </p>
+                <button
+                  onClick={() => handleCompanyLogin(company)}
+                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 active:scale-95 transition absolute bottom-4 right-4"
+                >
+                  Login
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
