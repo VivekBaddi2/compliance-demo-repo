@@ -2,105 +2,52 @@ import asyncHandler from "express-async-handler";
 import Company from "../schemas/companySchema.js";
 import bcrypt from "bcryptjs";
 
-// ✅ Create Company (by Admin)
-export const createCompany = asyncHandler(async (req, res) => {
-  try {
-    const { adminId, username, password } = req.body;
-
-    const existingCompany = await Company.findOne({ username });
-    if (existingCompany) {
-      return res.status(400).json({
-        success: false,
-        msg: "Company already exists",
-      });
-    }
-
-    const company = await Company.create({ adminId, username, password });
-
-    return res.status(201).json({
-      success: true,
-      msg: "Company created successfully",
-      data: company,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ success: false, msg: "Internal Server Error" });
-  }
-});
-
 // ✅ Get all companies
 export const getAllCompanies = asyncHandler(async (req, res) => {
-  try {
-    const companies = await Company.find().populate("adminId", "username");
-    res.status(200).json({
-      success: true,
-      data: companies,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, msg: "Internal Server Error" });
-  }
+  const companies = await Company.find().populate("adminId", "username");
+  res.status(200).json({ success: true, data: companies });
 });
 
-// ✅ Get companies by Admin
+// ✅ Get companies by Admin (only assigned to this admin)
 export const getCompaniesByAdmin = asyncHandler(async (req, res) => {
-  try {
-    const { adminId } = req.params;
-    const companies = await Company.find({ adminId });
-    res.status(200).json({
-      success: true,
-      data: companies,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, msg: "Internal Server Error" });
-  }
+  const { adminId } = req.params;
+  const companies = await Company.find({ adminId }).populate("adminId", "username");
+  res.status(200).json({ success: true, data: companies });
 });
 
-// ✅ Update Company
+// ✅ Update Company (admin can update own company credentials if needed)
 export const updateCompany = asyncHandler(async (req, res) => {
-  try {
-    const { companyId, username, password } = req.body;
-    const company = await Company.findById(companyId);
-    if (!company)
-      return res.status(404).json({ success: false, msg: "Company not found" });
+  const { companyId, username, password } = req.body;
 
-    company.username = username || company.username;
-    if (password) company.password = password;
+  const company = await Company.findById(companyId);
+  if (!company) return res.status(404).json({ success: false, msg: "Company not found" });
 
-    await company.save();
-    res.status(200).json({ success: true, msg: "Company updated", data: company });
-  } catch (error) {
-    res.status(500).json({ success: false, msg: "Internal Server Error" });
-  }
+  if (username) company.username = username;
+  if (password) company.password = password; // will be hashed via pre-save hook
+
+  await company.save();
+  res.status(200).json({ success: true, msg: "Company updated", data: company });
 });
 
 // ✅ Delete Company
 export const deleteCompany = asyncHandler(async (req, res) => {
-  try {
-    const del = await Company.findByIdAndDelete(req.params.id);
-    if (!del)
-      return res.status(404).json({ success: false, msg: "Company not found" });
+  const { id } = req.params;
+  const company = await Company.findById(id);
+  if (!company) return res.status(404).json({ success: false, msg: "Company not found" });
 
-    res.status(200).json({ success: true, msg: "Company deleted", data: del });
-  } catch (error) {
-    res.status(500).json({ success: false, msg: "Internal Server Error" });
-  }
+  await company.deleteOne();
+  res.status(200).json({ success: true, msg: "Company deleted successfully", data: company });
 });
 
-// ✅ Login Company
+// ✅ Company Login (with admin info)
 export const companyLogin = asyncHandler(async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    const company = await Company.findOne({ username });
+  const { username, password } = req.body;
 
-    if (!company)
-      return res.status(404).json({ success: false, msg: "Company not found" });
+  const company = await Company.findOne({ username }).populate("adminId", "username");
+  if (!company) return res.status(404).json({ success: false, msg: "Company not found" });
 
-    const isValid = await bcrypt.compare(password, company.password);
-    if (!isValid)
-      return res.status(401).json({ success: false, msg: "Invalid password" });
+  const isValid = await bcrypt.compare(password, company.password);
+  if (!isValid) return res.status(401).json({ success: false, msg: "Invalid password" });
 
-    res.status(200).json({ success: true, msg: "Login successful", data: company });
-  } catch (error) {
-    res.status(500).json({ success: false, msg: "Internal Server Error" });
-  }
+  res.status(200).json({ success: true, msg: "Login successful", data: company });
 });

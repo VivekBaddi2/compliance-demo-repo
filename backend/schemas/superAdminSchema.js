@@ -5,6 +5,9 @@ const superAdminSchema = new mongoose.Schema(
   {
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    // Optional: Keep track of created admins and companies (not mandatory)
+    admins: [{ type: mongoose.Schema.Types.ObjectId, ref: "Admin" }],
+    companies: [{ type: mongoose.Schema.Types.ObjectId, ref: "Company" }]
   },
   { timestamps: true }
 );
@@ -26,4 +29,5 @@ superAdminSchema.methods.comparePassword = async function (plainPassword) {
   return await bcrypt.compare(plainPassword, this.password);
 };
 
-export default mongoose.model("SuperAdmin", superAdminSchema);
+const SuperAdmin = mongoose.model("SuperAdmin", superAdminSchema);
+export default SuperAdmin;

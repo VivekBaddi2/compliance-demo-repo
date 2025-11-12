@@ -5,14 +5,44 @@ import {
   updateSuperAdmin,
   deleteSuperAdmin,
   loginSuperAdmin,
+  createAdminBySuperAdmin,
+  createCompanyBySuperAdmin,
+  assignCompaniesToAdmin,
+  reallotCompanies,
+  getAllAdminsWithCompanies,
+  getAllCompaniesWithAdmins,
+  changeAdminPassword,
+  changeCompanyPassword,
+  deleteAdmin,
+  deleteCompany,
+  removeCompanyFromAdmin,
 } from "../controllers/superAdminController.js";
 
-const superAdminRouter = express.Router();
+const router = express.Router();
 
-superAdminRouter.route("/create").post(createSuperAdmin);
-superAdminRouter.route("/findAll").get(getAllSuperAdmins);
-superAdminRouter.route("/update/:id").put(updateSuperAdmin);
-superAdminRouter.route("/delete/:id").delete(deleteSuperAdmin);
-superAdminRouter.route("/login").post(loginSuperAdmin);
+// -------------------------
+// Super Admin CRUD
+// -------------------------
+router.post("/create", createSuperAdmin);
+router.get("/findAll", getAllSuperAdmins);
+router.put("/update/:id", updateSuperAdmin);
+router.delete("/delete/:id", deleteSuperAdmin);
+router.post("/login", loginSuperAdmin);
 
-export default superAdminRouter;
+// -------------------------
+// Admin & Company Management
+// -------------------------
+router.post("/createAdmin", createAdminBySuperAdmin);
+router.post("/createCompany", createCompanyBySuperAdmin);
+router.post("/assignCompanies", assignCompaniesToAdmin);
+router.post("/reallotCompanies", reallotCompanies);
+router.get("/adminsWithCompanies", getAllAdminsWithCompanies);
+router.get("/companiesWithAdmins", getAllCompaniesWithAdmins);
+router.put("/changeAdminPassword/:adminId", changeAdminPassword);
+router.put("/changeCompanyPassword/:companyId", changeCompanyPassword);
+router.delete("/deleteAdmin/:adminId", deleteAdmin);
+router.delete("/deleteCompany/:companyId", deleteCompany);
+router.delete("/removeCompany/:adminId/:companyId", removeCompanyFromAdmin);
+
+
+export default router;

@@ -5,12 +5,15 @@ const adminSchema = new mongoose.Schema(
   {
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "SuperAdmin" } // who added this admin
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "SuperAdmin", required: true },
+    assignedCompanies: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Company", default: [] } // ensures it's always an array
+    ]
   },
   { timestamps: true }
 );
 
-// hash password before saving
+// Hash password before saving
 adminSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
@@ -18,7 +21,7 @@ adminSchema.pre("save", async function (next) {
   next();
 });
 
-// match password
+// Match password method
 adminSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

@@ -1,130 +1,253 @@
-import asynchandler from "express-async-handler";
+import asyncHandler from "express-async-handler";
 import SuperAdmin from "../schemas/superAdminSchema.js";
+import Admin from "../schemas/adminSchema.js";
+import Company from "../schemas/companySchema.js";
 
-// Create Super Admin
-export const createSuperAdmin = asynchandler(async (req, res) => {
-  try {
-    const { username, password } = req.body;
+// -------------------------
+// Super Admin CRUD
+// -------------------------
 
-    const existingAdmin = await SuperAdmin.findOne({ username });
-    if (existingAdmin) {
-      return res.status(400).json({
-        success: false,
-        msg: "Super Admin already exists",
-      });
-    }
-
-    const newAdmin = await SuperAdmin.create({ username, password });
-
-    return res.status(201).json({
-      success: true,
-      msg: "Super Admin created successfully",
-      data: newAdmin,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      msg: "Internal Server Error",
-    });
-  }
-});
-
-// Get all Super Admins
-export const getAllSuperAdmins = asynchandler(async (req, res) => {
-  try {
-    const admins = await SuperAdmin.find();
-    return res.status(200).json({
-      success: true,
-      msg: "Super Admins fetched successfully",
-      data: admins,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      msg: "Internal Server Error",
-    });
-  }
-});
-
-// Update Super Admin
-export const updateSuperAdmin = asynchandler(async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { username, password } = req.body;
-
-    const admin = await SuperAdmin.findById(id);
-    if (!admin) {
-      return res.status(404).json({
-        success: false,
-        msg: "Super Admin not found",
-      });
-    }
-
-    if (username) admin.username = username;
-    if (password) admin.password = password; // will rehash via pre-save
-    await admin.save();
-
-    return res.status(200).json({
-      success: true,
-      msg: "Super Admin updated successfully",
-      data: admin,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      msg: "Internal Server Error",
-    });
-  }
-});
-
-// Delete Super Admin
-export const deleteSuperAdmin = asynchandler(async (req, res) => {
-  try {
-    const deletedAdmin = await SuperAdmin.findByIdAndDelete(req.params.id);
-    if (!deletedAdmin) {
-      return res.status(404).json({
-        success: false,
-        msg: "Super Admin not found",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      msg: "Super Admin deleted successfully",
-      data: deletedAdmin,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      msg: "Internal Server Error",
-    });
-  }
-});
-
-
-export const loginSuperAdmin = asynchandler(async (req, res) => {
+export const createSuperAdmin = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
 
-  const superAdmin = await SuperAdmin.findOne({ username });
-  if (!superAdmin) {
-    return res.status(404).json({ message: "Super admin not found" });
-  }
+  if (!username || !password)
+    return res.status(400).json({ success: false, msg: "All fields required" });
 
-  const isPasswordValid = await superAdmin.comparePassword(password);
-  if (!isPasswordValid) {
-    return res.status(401).json({ message: "Invalid password" });
-  }
+  const existing = await SuperAdmin.findOne({ username });
+  if (existing)
+    return res.status(400).json({ success: false, msg: "Super Admin already exists" });
 
-  res.status(200).json({
-    message: "Login successful",
-    superAdmin: {
-      _id: superAdmin._id,
-      username: superAdmin.username,
-    },
+  const newSuperAdmin = await SuperAdmin.create({ username, password });
+
+  res.status(201).json({
+    success: true,
+    msg: "Super Admin created successfully",
+    data: newSuperAdmin,
   });
 });
 
+export const getAllSuperAdmins = asyncHandler(async (req, res) => {
+  const admins = await SuperAdmin.find()
+    .populate({
+      path: "admins",
+      select: "username assignedCompanies",
+      populate: { path: "assignedCompanies", select: "username" }
+    })
+    .populate("companies", "username");
+
+  res.status(200).json({ success: true, data: admins });
+});
+
+export const updateSuperAdmin = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { username, password } = req.body;
+
+  const superAdmin = await SuperAdmin.findById(id);
+  if (!superAdmin)
+    return res.status(404).json({ success: false, msg: "Super Admin not found" });
+
+  if (username) superAdmin.username = username;
+  if (password) superAdmin.password = password; // pre-save hashes password
+
+  await superAdmin.save();
+
+  res.status(200).json({
+    success: true,
+    msg: "Super Admin updated successfully",
+    data: superAdmin,
+  });
+});
+
+export const deleteSuperAdmin = asyncHandler(async (req, res) => {
+  const deleted = await SuperAdmin.findByIdAndDelete(req.params.id);
+  if (!deleted)
+    return res.status(404).json({ success: false, msg: "Super Admin not found" });
+
+  res.status(200).json({ success: true, msg: "Super Admin deleted successfully", data: deleted });
+});
+
+export const loginSuperAdmin = asyncHandler(async (req, res) => {
+  const { username, password } = req.body;
+
+  const superAdmin = await SuperAdmin.findOne({ username });
+  if (!superAdmin) return res.status(404).json({ message: "Super Admin not found" });
+
+  const isValid = await superAdmin.comparePassword(password);
+  if (!isValid) return res.status(401).json({ message: "Invalid password" });
+
+  res.status(200).json({
+    message: "Login successful",
+    superAdmin: { _id: superAdmin._id, username: superAdmin.username },
+  });
+});
+
+// -------------------------
+// Admin & Company Management
+// -------------------------
+
+export const createAdminBySuperAdmin = asyncHandler(async (req, res) => {
+  const { username, password, createdBy } = req.body; // include createdBy
+  if (!username || !password || !createdBy)
+    return res.status(400).json({ success: false, msg: "All fields required" });
+
+  const existing = await Admin.findOne({ username });
+  if (existing) return res.status(400).json({ success: false, msg: "Admin already exists" });
+
+  const admin = await Admin.create({
+    username,
+    password,
+    createdBy,
+    assignedCompanies: [],
+  });
+
+  res.status(201).json({ success: true, msg: "Admin created", data: admin });
+});
+
+// Create Company (by Super Admin)
+export const createCompanyBySuperAdmin = asyncHandler(async (req, res) => {
+  const { username, password } = req.body; // no adminId needed here
+  if (!username || !password)
+    return res.status(400).json({ success: false, msg: "All fields required" });
+
+  const existing = await Company.findOne({ username });
+  if (existing) return res.status(400).json({ success: false, msg: "Company already exists" });
+
+  const company = await Company.create({ username, password }); // adminId will be null initially
+
+  res.status(201).json({ success: true, msg: "Company created", data: company });
+});
+
+export const assignCompaniesToAdmin = asyncHandler(async (req, res) => {
+  const { adminId, companyIds } = req.body;
+
+  const admin = await Admin.findById(adminId);
+  if (!admin) return res.status(404).json({ success: false, msg: "Admin not found" });
+
+  if (!Array.isArray(admin.assignedCompanies)) admin.assignedCompanies = [];
+  admin.assignedCompanies = Array.from(new Set([...admin.assignedCompanies.map(c => c.toString()), ...companyIds]));
+
+  await Company.updateMany({ _id: { $in: companyIds } }, { adminId: admin._id });
+  await admin.save();
+
+  res.status(200).json({ success: true, msg: "Companies assigned to admin", data: admin });
+});
+
+export const reallotCompanies = asyncHandler(async (req, res) => {
+  const { fromAdminId, toAdminId, companyIds } = req.body;
+
+  const fromAdmin = await Admin.findById(fromAdminId);
+  const toAdmin = await Admin.findById(toAdminId);
+  if (!fromAdmin || !toAdmin) return res.status(404).json({ success: false, msg: "Admin(s) not found" });
+
+  if (!Array.isArray(fromAdmin.assignedCompanies)) fromAdmin.assignedCompanies = [];
+  if (!Array.isArray(toAdmin.assignedCompanies)) toAdmin.assignedCompanies = [];
+
+  fromAdmin.assignedCompanies = fromAdmin.assignedCompanies.filter(c => !companyIds.includes(c.toString()));
+  toAdmin.assignedCompanies = Array.from(new Set([...toAdmin.assignedCompanies.map(c => c.toString()), ...companyIds]));
+
+  await Company.updateMany({ _id: { $in: companyIds } }, { adminId: toAdmin._id });
+  await fromAdmin.save();
+  await toAdmin.save();
+
+  res.status(200).json({ success: true, msg: "Companies re-allotted", data: { fromAdmin, toAdmin } });
+});
+
+export const getAllAdminsWithCompanies = asyncHandler(async (req, res) => {
+  const admins = await Admin.find().populate("assignedCompanies", "username");
+  res.status(200).json({ success: true, data: admins });
+});
+
+export const getAllCompaniesWithAdmins = asyncHandler(async (req, res) => {
+  const companies = await Company.find().populate("adminId", "username");
+  res.status(200).json({ success: true, data: companies });
+});
+
+export const changeAdminPassword = asyncHandler(async (req, res) => {
+  const { adminId } = req.params;
+  const { newPassword } = req.body;
+  if (!newPassword) return res.status(400).json({ success: false, msg: "New password is required" });
+
+  const admin = await Admin.findById(adminId);
+  if (!admin) return res.status(404).json({ success: false, msg: "Admin not found" });
+
+  admin.password = newPassword;
+  await admin.save();
+
+  res.status(200).json({ success: true, msg: "Admin password updated successfully" });
+});
+
+export const changeCompanyPassword = asyncHandler(async (req, res) => {
+  const { companyId } = req.params;
+  const { newPassword } = req.body;
+  if (!newPassword) return res.status(400).json({ success: false, msg: "New password is required" });
+
+  const company = await Company.findById(companyId);
+  if (!company) return res.status(404).json({ success: false, msg: "Company not found" });
+
+  company.password = newPassword;
+  await company.save();
+
+  res.status(200).json({ success: true, msg: "Company password updated successfully" });
+});
+
+export const deleteAdmin = asyncHandler(async (req, res) => {
+  const { adminId } = req.params;
+
+  const admin = await Admin.findById(adminId);
+  if (!admin) {
+    return res.status(404).json({ success: false, msg: "Admin not found" });
+  }
+
+  // Remove admin using findByIdAndDelete for safety
+  await Admin.findByIdAndDelete(adminId);
+
+  // Optional: unset adminId in companies assigned to this admin
+  await Company.updateMany(
+    { adminId: adminId },
+    { $set: { adminId: null } }
+  );
+
+  res.status(200).json({ success: true, msg: "Admin deleted successfully" });
+});
+
+
+export const deleteCompany = asyncHandler(async (req, res) => {
+  const { companyId } = req.params;
+
+  const company = await Company.findById(companyId);
+  if (!company) {
+    return res.status(404).json({ success: false, msg: "Company not found" });
+  }
+
+  // Remove company using findByIdAndDelete
+  await Company.findByIdAndDelete(companyId);
+
+  // Optional: remove this company from any admin's assignedCompanies array
+  await Admin.updateMany(
+    { assignedCompanies: companyId },
+    { $pull: { assignedCompanies: companyId } }
+  );
+
+  res.status(200).json({ success: true, msg: "Company deleted successfully" });
+});
+
+// Remove company from admin
+export const removeCompanyFromAdmin = asyncHandler(async (req, res) => {
+  const { adminId, companyId } = req.params;
+
+  const admin = await Admin.findById(adminId);
+  if (!admin) return res.status(404).json({ success: false, msg: "Admin not found" });
+
+  const company = await Company.findById(companyId);
+  if (!company) return res.status(404).json({ success: false, msg: "Company not found" });
+
+  // Remove company from admin's assignedCompanies
+  admin.assignedCompanies = admin.assignedCompanies.filter(c => c.toString() !== companyId);
+  await admin.save();
+
+  // Set company adminId to null
+  company.adminId = null;
+  await company.save();
+
+  res.status(200).json({ success: true, msg: "Company removed from admin", data: { admin, company } });
+});

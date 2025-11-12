@@ -2,11 +2,6 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const companySchema = new mongoose.Schema({
-  adminId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Admin",
-    required: true,
-  },
   username: {
     type: String,
     required: true,
@@ -16,9 +11,14 @@ const companySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-});
+  adminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    default: null, // can be assigned later
+  },
+} , { timestamps: true });
 
-// hash password before save
+// Hash password before save
 companySchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);

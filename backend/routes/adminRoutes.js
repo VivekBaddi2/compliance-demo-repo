@@ -1,10 +1,23 @@
 import express from "express";
-import { createAdmin, getAllAdmins, deleteAdmin , loginAdmin} from "../controllers/adminController.js";
+import {
+  loginAdmin,
+  getAssignedCompanies,
+  updatePassword,
+    getAllAdmins
+} from "../controllers/adminController.js";
 
 const router = express.Router();
 
-router.post("/create", createAdmin);
-router.get("/getAll", getAllAdmins);
-router.delete("/delete/:id", deleteAdmin);
+// Admin login
 router.post("/login", loginAdmin);
+
+// Get all companies assigned to an admin
+router.get("/assignedCompanies/:adminId", getAssignedCompanies);
+
+// Admin updates their own password
+router.put("/updatePassword/:adminId", updatePassword);
+
+// Get all admins
+router.get("/getAll", getAllAdmins);
+
 export default router;
