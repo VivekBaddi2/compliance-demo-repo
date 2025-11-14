@@ -162,33 +162,6 @@ export const getAllCompaniesWithAdmins = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: companies });
 });
 
-export const changeAdminPassword = asyncHandler(async (req, res) => {
-  const { adminId } = req.params;
-  const { newPassword } = req.body;
-  if (!newPassword) return res.status(400).json({ success: false, msg: "New password is required" });
-
-  const admin = await Admin.findById(adminId);
-  if (!admin) return res.status(404).json({ success: false, msg: "Admin not found" });
-
-  admin.password = newPassword;
-  await admin.save();
-
-  res.status(200).json({ success: true, msg: "Admin password updated successfully" });
-});
-
-export const changeCompanyPassword = asyncHandler(async (req, res) => {
-  const { companyId } = req.params;
-  const { newPassword } = req.body;
-  if (!newPassword) return res.status(400).json({ success: false, msg: "New password is required" });
-
-  const company = await Company.findById(companyId);
-  if (!company) return res.status(404).json({ success: false, msg: "Company not found" });
-
-  company.password = newPassword;
-  await company.save();
-
-  res.status(200).json({ success: true, msg: "Company password updated successfully" });
-});
 
 export const deleteAdmin = asyncHandler(async (req, res) => {
   const { adminId } = req.params;
@@ -250,4 +223,41 @@ export const removeCompanyFromAdmin = asyncHandler(async (req, res) => {
   await company.save();
 
   res.status(200).json({ success: true, msg: "Company removed from admin", data: { admin, company } });
+});
+
+export const updateAdminBySuperAdmin = asyncHandler(async (req, res) => {
+  const { adminId } = req.params;
+  const { username, password } = req.body;
+
+  const admin = await Admin.findById(adminId);
+  if (!admin) {
+    return res.status(404).json({ success: false, msg: "Admin not found" });
+  }
+
+  if (username) admin.username = username;
+  if (password) admin.password = password; // will be hashed by pre-save
+
+  await admin.save();
+
+  res.status(200).json({
+    success: true,
+    msg: "Admin updated successfully",
+    data: admin,
+  });
+});
+
+// Update company (SuperAdmin)
+export const updateCompanyBySuperAdmin = asyncHandler(async (req, res) => {
+  const { companyId } = req.params;
+  const { username, password } = req.body;
+
+  const company = await Company.findById(companyId);
+  if (!company) return res.status(404).json({ success: false, msg: "Company not found" });
+
+  if (username) company.username = username;
+  if (password) company.password = password; // hashed by Company's pre-save hook
+
+  await company.save();
+
+  res.status(200).json({ success: true, msg: "Company updated successfully", data: company });
 });

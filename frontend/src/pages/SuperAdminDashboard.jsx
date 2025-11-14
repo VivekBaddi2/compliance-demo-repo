@@ -120,39 +120,60 @@ const handleRemoveAllotment = async (adminId, companyId) => {
   };
 
   const handleEditAdmin = async (admin) => {
-    const { value: formValues } = await Swal.fire({
-      title: "Edit Admin",
-      html:
-        `<input id="swal-username" class="swal2-input" placeholder="Username" value="${admin.username}">` +
-        `<input id="swal-password" type="password" class="swal2-input" placeholder="Password">`,
-      focusConfirm: false,
-      preConfirm: () => {
-        return {
-          username: document.getElementById("swal-username").value,
-          password: document.getElementById("swal-password").value,
-        };
-      },
-    });
+  const { value: formValues } = await Swal.fire({
+    title: "Edit Admin",
+    html: `
+      <input id="swal-username" class="swal2-input" placeholder="Username" value="${admin.username}">
 
-    if (formValues) {
-      try {
-        if (formValues.username)
-          await axios.put(
-            `http://localhost:4000/api/superadmin/update/${admin._id}`,
-            { username: formValues.username }
-          );
-        if (formValues.password)
-          await axios.put(
-            `http://localhost:4000/api/superadmin/changeAdminPassword/${admin._id}`,
-            { newPassword: formValues.password }
-          );
-        Swal.fire("Success", "Admin updated successfully", "success");
-        fetchAdmins();
-      } catch (err) {
-        Swal.fire("Error", err.response?.data?.msg || "Server Error", "error");
-      }
+      <div style="position: relative; width: 100%;">
+        <input id="swal-password" type="password" class="swal2-input" placeholder="Password" style="padding-right:40px;">
+        <span id="togglePass"
+          style="position:absolute; right:10px; top:12px; cursor:pointer; font-size:18px;">
+          👁️
+        </span>
+      </div>
+    `,
+    focusConfirm: false,
+
+    // 🔥 Eye icon toggle logic here
+    didOpen: () => {
+      const passwordInput = document.getElementById("swal-password");
+      const toggleIcon = document.getElementById("togglePass");
+
+      toggleIcon.addEventListener("click", () => {
+        if (passwordInput.type === "password") {
+          passwordInput.type = "text";
+          toggleIcon.textContent = "🙈"; // change icon
+        } else {
+          passwordInput.type = "password";
+          toggleIcon.textContent = "👁️";
+        }
+      });
+    },
+
+    preConfirm: () => {
+      return {
+        username: document.getElementById("swal-username").value,
+        password: document.getElementById("swal-password").value,
+      };
+    },
+  });
+
+  if (formValues) {
+    try {
+      await axios.put(
+        `http://localhost:4000/api/superadmin/update-admin/${admin._id}`,
+        formValues
+      );
+
+      Swal.fire("Success", "Admin updated successfully", "success");
+      fetchAdmins();
+    } catch (err) {
+      Swal.fire("Error", err.response?.data?.msg || "Server Error", "error");
     }
-  };
+  }
+};
+
 
   // ---------------- Company Handlers ----------------
   const handleAddCompany = async () => {
@@ -196,40 +217,63 @@ const handleRemoveAllotment = async (adminId, companyId) => {
     }
   };
 
-  const handleEditCompany = async (company) => {
-    const { value: formValues } = await Swal.fire({
-      title: "Edit Company",
-      html:
-        `<input id="swal-username" class="swal2-input" placeholder="Username" value="${company.username}">` +
-        `<input id="swal-password" type="password" class="swal2-input" placeholder="Password">`,
-      focusConfirm: false,
-      preConfirm: () => {
-        return {
-          username: document.getElementById("swal-username").value,
-          password: document.getElementById("swal-password").value,
-        };
-      },
-    });
+ const handleEditCompany = async (company) => {
+  const { value: formValues } = await Swal.fire({
+    title: "Edit Company",
+    html: `
+      <input id="swal-username" class="swal2-input" placeholder="Username" value="${company.username}">
 
-    if (formValues) {
-      try {
-        if (formValues.username)
-          await axios.put(
-            `http://localhost:4000/api/superadmin/update/${company._id}`,
-            { username: formValues.username }
-          );
-        if (formValues.password)
-          await axios.put(
-            `http://localhost:4000/api/superadmin/changeCompanyPassword/${company._id}`,
-            { newPassword: formValues.password }
-          );
-        Swal.fire("Success", "Company updated successfully", "success");
-        fetchCompanies();
-      } catch (err) {
-        Swal.fire("Error", err.response?.data?.msg || "Server Error", "error");
-      }
+      <div style="position: relative; width: 100%;">
+        <input id="swal-password" type="password" class="swal2-input" placeholder="Password" style="padding-right:40px;">
+        <span id="togglePass"
+          style="position:absolute; right:10px; top:12px; cursor:pointer; font-size:18px;">
+          👁️
+        </span>
+      </div>
+    `,
+    focusConfirm: false,
+
+    didOpen: () => {
+      const passInput = document.getElementById("swal-password");
+      const toggle = document.getElementById("togglePass");
+
+      toggle.addEventListener("click", () => {
+        if (passInput.type === "password") {
+          passInput.type = "text";
+          toggle.textContent = "🙈";
+        } else {
+          passInput.type = "password";
+          toggle.textContent = "👁️";
+        }
+      });
+    },
+
+    preConfirm: () => {
+      return {
+        username: document.getElementById("swal-username").value,
+        password: document.getElementById("swal-password").value,
+      };
+    },
+  });
+
+  if (formValues) {
+    try {
+      await axios.put(
+        `http://localhost:4000/api/superadmin/update-company/${company._id}`,
+        {
+          username: formValues.username,
+          password: formValues.password,
+        }
+      );
+
+      Swal.fire("Success", "Company updated successfully", "success");
+      fetchCompanies();
+    } catch (err) {
+      Swal.fire("Error", err.response?.data?.msg || "Server Error", "error");
     }
-  };
+  }
+};
+
 
   // ---------------- Allotment Handlers ----------------
   const handleAllotCompanies = async () => {

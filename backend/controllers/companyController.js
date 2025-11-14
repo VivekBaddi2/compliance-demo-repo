@@ -15,20 +15,6 @@ export const getCompaniesByAdmin = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: companies });
 });
 
-// ✅ Update Company (admin can update own company credentials if needed)
-export const updateCompany = asyncHandler(async (req, res) => {
-  const { companyId, username, password } = req.body;
-
-  const company = await Company.findById(companyId);
-  if (!company) return res.status(404).json({ success: false, msg: "Company not found" });
-
-  if (username) company.username = username;
-  if (password) company.password = password; // will be hashed via pre-save hook
-
-  await company.save();
-  res.status(200).json({ success: true, msg: "Company updated", data: company });
-});
-
 // ✅ Delete Company
 export const deleteCompany = asyncHandler(async (req, res) => {
   const { id } = req.params;

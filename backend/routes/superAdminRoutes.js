@@ -11,11 +11,11 @@ import {
   reallotCompanies,
   getAllAdminsWithCompanies,
   getAllCompaniesWithAdmins,
-  changeAdminPassword,
-  changeCompanyPassword,
   deleteAdmin,
   deleteCompany,
   removeCompanyFromAdmin,
+  updateAdminBySuperAdmin,
+  updateCompanyBySuperAdmin,
 } from "../controllers/superAdminController.js";
 
 const router = express.Router();
@@ -38,11 +38,11 @@ router.post("/assignCompanies", assignCompaniesToAdmin);
 router.post("/reallotCompanies", reallotCompanies);
 router.get("/adminsWithCompanies", getAllAdminsWithCompanies);
 router.get("/companiesWithAdmins", getAllCompaniesWithAdmins);
-router.put("/changeAdminPassword/:adminId", changeAdminPassword);
-router.put("/changeCompanyPassword/:companyId", changeCompanyPassword);
 router.delete("/deleteAdmin/:adminId", deleteAdmin);
 router.delete("/deleteCompany/:companyId", deleteCompany);
 router.delete("/removeCompany/:adminId/:companyId", removeCompanyFromAdmin);
+router.put("/update-admin/:adminId", updateAdminBySuperAdmin);
+router.put("/update-company/:companyId", updateCompanyBySuperAdmin);
 
 
 export default router;
