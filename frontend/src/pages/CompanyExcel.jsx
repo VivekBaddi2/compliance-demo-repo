@@ -5,7 +5,7 @@ import DetailedSheetPage from "./DetailedSheetPage";
 
 export default function CompanyExcel() {
   const navigate = useNavigate();
-  const company = JSON.parse(localStorage.getItem("company"));
+  const company = JSON.parse(localStorage.getItem("companyLoggedIn"));
   const [activeSheet, setActiveSheet] = useState("dashboard"); // dashboard or monthly/quarterly/half-yearly/yearly
   const [selectedHead, setSelectedHead] = useState(null);
 
@@ -17,7 +17,7 @@ export default function CompanyExcel() {
   const sheetTypes = ["dashboard", "monthly", "quarterly", "half-yearly", "yearly"];
 
   const handleLogout = () => {
-    localStorage.removeItem("company");
+    localStorage.removeItem("companyLoggedIn");
     localStorage.removeItem("admin"); 
     navigate("/");
   };

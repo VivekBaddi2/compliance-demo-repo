@@ -5,6 +5,10 @@ import AdminLogin from "./pages/AdminLogin";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import CompanyLogin from "./pages/CompanyLogin";
+import MonthlyPage from "./pages/MonthlyPage";
+import QuarterlyPage from "./pages/QuarterlyPage";
+import HalfYearlyPage from "./pages/HalfYearlyPage";
+import YearlyPage from "./pages/YearlyPage";
 
 // Company pages
 import CompanyDashboard from "./pages/CompanyDashboard";
@@ -24,7 +28,10 @@ export default function App() {
         <Route path="/login/admin" element={<AdminLogin />} />
 
         {/* Super Admin Dashboard */}
-        <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
+        <Route
+          path="/super-admin/dashboard"
+          element={<SuperAdminDashboard />}
+        />
 
         {/* Admin Dashboard */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -40,6 +47,18 @@ export default function App() {
 
         {/* Fallback route so /company/sheet works without ID */}
         <Route path="/company/sheet" element={<CompanyDashboard />} />
+
+        {/* Monthly Page */}
+        <Route path="/company/monthly" element={<MonthlyPage />} />
+
+        {/* Quarterly Page */}
+        <Route path="/company/quarterly" element={<QuarterlyPage />} />
+
+        {/* Half Yearly Page */}
+        <Route path="/company/half-yearly" element={<HalfYearlyPage />} />
+        
+        {/* Yearly Page */}
+        <Route path="/company/yearly" element={<YearlyPage />} />
       </Routes>
     </Router>
   );

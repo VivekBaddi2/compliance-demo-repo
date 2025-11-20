@@ -1,16 +1,26 @@
-import { Link } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
-export default function Navbar() {
+export default function CompanyNavbar() {
+  const navigate = useNavigate();
+
+  const tabs = [
+    { label: "Monthly", path: "/company/monthly" },
+    { label: "Quarterly", path: "/company/quarterly" },
+    { label: "Half Yearly", path: "/company/half-yearly" },
+    { label: "Yearly", path: "/company/yearly" },
+  ];
+
   return (
-    <nav className="bg-gray-900 text-white p-4 flex justify-between items-center">
-      <h1 className="text-xl font-bold">Compliance Manager</h1>
-      <div className="space-x-4">
-        <Link to="/" className="hover:text-gray-400">Dashboard</Link>
-        <Link to="/monthly" className="hover:text-gray-400">Monthly</Link>
-        <Link to="/quarterly" className="hover:text-gray-400">Quarterly</Link>
-        <Link to="/halfyearly" className="hover:text-gray-400">Half-Yearly</Link>
-        <Link to="/yearly" className="hover:text-gray-400">Yearly</Link>
-      </div>
-    </nav>
+    <div className="w-full bg-white shadow-md py-3 px-6 flex gap-4 border-b">
+      {tabs.map((t) => (
+        <button
+          key={t.path}
+          onClick={() => navigate(t.path)}
+          className="px-4 py-2 text-sm font-medium rounded-md hover:bg-blue-600 hover:text-white transition"
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
   );
 }
