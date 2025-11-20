@@ -56,7 +56,7 @@ export default function AdminDashboard() {
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.removeItem("admin");
-        localStorage.removeItem("company");
+        localStorage.removeItem("companyLoggedIn");
         navigate("/");
         window.location.reload();
       }
@@ -64,7 +64,7 @@ export default function AdminDashboard() {
   };
 
   const handleCompanyLogin = (company) => {
-    localStorage.setItem("company", JSON.stringify(company));
+    localStorage.setItem("companyLoggedIn", JSON.stringify(company));
     navigate("/company/login");
   };
 

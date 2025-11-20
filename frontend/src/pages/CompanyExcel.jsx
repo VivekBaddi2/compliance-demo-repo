@@ -18,6 +18,7 @@ export default function CompanyExcel() {
 
   const handleLogout = () => {
     localStorage.removeItem("company");
+    localStorage.removeItem("admin"); 
     navigate("/");
   };
 

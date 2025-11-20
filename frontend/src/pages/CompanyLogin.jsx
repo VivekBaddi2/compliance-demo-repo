@@ -28,6 +28,7 @@ export default function CompanyLogin() {
 
       if (response.data.success) {
         // Save logged-in company info
+        console.log("Company login response:", response.data);
         localStorage.setItem("companyLoggedIn", JSON.stringify(response.data.data));
         navigate("/company/sheet"); // Redirect to company sheet page
       }

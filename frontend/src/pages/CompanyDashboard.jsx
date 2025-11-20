@@ -5,7 +5,7 @@ import { FaTimes, FaEdit, FaSave } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 export default function CompanyDashboard() {
-  const company = JSON.parse(localStorage.getItem("company") || "null");
+  const company = JSON.parse(localStorage.getItem("companyLoggedIn") || "null");
   const navigate = useNavigate();
 
   const [sheet, setSheet] = useState(null);
@@ -37,6 +37,11 @@ export default function CompanyDashboard() {
   };
 
   useEffect(() => { fetch(); }, []);
+    const handleLogout = () => {
+    localStorage.removeItem("companyLoggedIn");
+    // localStorage.removeItem("admin"); 
+    navigate("/admin/dashboard");
+  };
 
   const handleCreateSheet = async () => {
     if (!company?._id) return alert("Company required");
@@ -185,6 +190,7 @@ export default function CompanyDashboard() {
               <button onClick={handleSave} className="px-3 py-1 bg-green-600 text-white rounded flex gap-2">
                 <FaSave /> Save
               </button>
+              <button onClick={()=> handleLogout()} className="px-3 py-1 bg-red-600 text-white rounded">Logout</button>
             </>
           )}
         </div>
