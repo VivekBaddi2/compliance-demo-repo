@@ -1,12 +1,16 @@
 import expressRouter from "express";
-import sheetRouter from "./sheetRoutes.js";
 import superAdminRouter from "./superAdminRoutes.js";
 import adminRouter from "./adminRoutes.js";
 import companyRouter from "./companyRoutes.js";
+import dashboardRouter from "./dashboardRoutes.js";
+import detailedSheetRouter from "./detailedSheetRoutes.js";
 
 const router = expressRouter();
+
 router.use("/superAdmin", superAdminRouter);
-router.use("/sheet", sheetRouter);
 router.use("/admin", adminRouter);
 router.use("/company", companyRouter);
+router.use("/dashboard", dashboardRouter);
+router.use("/dsheet", detailedSheetRouter);
+
 export default router;
