@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import ClientSheets from "../components/ClientSheets";
 
 export default function SuperAdminDashboard() {
   const [activeTab, setActiveTab] = useState("admins");
@@ -329,19 +330,18 @@ const handleRemoveAllotment = async (adminId, companyId) => {
 
       {/* Toggle Buttons */}
       <div className="flex justify-center gap-4 mb-6">
-        {["admins", "companies", "allotments"].map((tab) => (
-          <button
-            key={tab}
-            className={`px-6 py-2 rounded-lg font-semibold ${
-              activeTab === tab
-                ? "bg-blue-600 text-white"
-                : "bg-white shadow hover:bg-gray-100"
-            }`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
+       {["admins", "companies", "allotments", "clients"].map((tab) => (
+  <button
+    key={tab}
+    className={`px-6 py-2 rounded-lg font-semibold ${
+      activeTab === tab ? "bg-blue-600 text-white" : "bg-white shadow hover:bg-gray-100"
+    }`}
+    onClick={() => setActiveTab(tab)}
+  >
+    {tab === "clients" ? "Client Sheets" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+  </button>
+))}
+
       </div>
 
       {/* ---------------- Admins Section ---------------- */}
@@ -663,6 +663,12 @@ const handleRemoveAllotment = async (adminId, companyId) => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+       {/* ---------------- Client Sheets Section ---------------- */}
+      {activeTab === "clients" && (
+        <div className="bg-white p-6 rounded-xl shadow">
+          <ClientSheets />
         </div>
       )}
     </div>

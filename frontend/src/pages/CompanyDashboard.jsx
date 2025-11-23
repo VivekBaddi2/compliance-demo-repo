@@ -53,11 +53,6 @@ export default function CompanyDashboard() {
     fetch();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("activeCompany"); // updated key
-    navigate("/admin/dashboard"); // redirect to admin dashboard
-  };
-
   const handleCreateSheet = async () => {
     if (!company?._id) return alert("Company required");
     try {
@@ -272,10 +267,10 @@ export default function CompanyDashboard() {
                   <FaSave /> Save
                 </button>
                 <button
-                  onClick={handleLogout}
-                  className="px-3 py-1 bg-red-600 text-white rounded"
+                  onClick={() => navigate("/admin/dashboard")}
+                  className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 active:scale-95 transition"
                 >
-                  Logout
+                  Back
                 </button>
               </>
             )}
