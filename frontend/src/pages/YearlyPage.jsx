@@ -1,7 +1,6 @@
+// YearlyPage.jsx
+import DetailedHeadPage from "./DetailedSheetPage";
+
 export default function YearlyPage() {
-  return (
-    <div className="p-6 text-xl font-semibold">
-      Yearly Sheet Page (Dummy Content)
-    </div>
-  );
+  return <DetailedHeadPage headType="Yearly" />;
 }

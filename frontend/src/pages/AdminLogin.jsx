@@ -42,7 +42,7 @@ export default function AdminLogin() {
 
       if (data?.admin) {
         localStorage.setItem("admin", JSON.stringify(data.admin));
-        // sessionStorage.removeItem("adminJustLoggedOut");
+        sessionStorage.removeItem("adminJustLoggedOut");
         navigate("/admin/dashboard");
       } else {
         setError("Invalid login response");

@@ -1,10 +1,10 @@
 import express from "express";
-import { createSubSheet, updateSubSheet, getSubSheet, getSubSheetsBySheet } from "../controllers/detailedSheetController.js";
+import { createSubSheet, updateSubSheet, getSubSheetsByHead, deleteSubSheet } from "../controllers/detailedSheetController.js";
 const router = express.Router();
 
 router.post("/create", createSubSheet);
+router.get("/list/:companyId/:headType", getSubSheetsByHead);
 router.put("/update/:id", updateSubSheet);
-router.get("/get/:id", getSubSheet);
-router.get("/list/:sheetId", getSubSheetsBySheet);
+router.delete("/delete/:id", deleteSubSheet);
 
 export default router;

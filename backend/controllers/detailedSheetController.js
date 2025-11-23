@@ -2,37 +2,59 @@
 import asyncHandler from "express-async-handler";
 import SubSheet from "../schemas/detailedSheetSchema.js";
 
-// create or update sub-sheet
+// Create a new subsheet (with initial 4x4 table)
 export const createSubSheet = asyncHandler(async (req, res) => {
-  const payload = req.body;
-  const { companyId, sheetId, headType, serviceName, period } = payload;
-  if (!companyId || !sheetId || !headType || !serviceName || !period)
-    return res.status(400).json({ success: false, msg: "companyId, sheetId, headType, serviceName, period required" });
+  const { companyId, headType, serviceName, period, heading } = req.body;
+  if (!companyId || !headType || !serviceName || !period)
+    return res.status(400).json({ success: false, msg: "Required fields missing" });
 
-  const created = await SubSheet.create(payload);
-  res.status(201).json({ success: true, msg: "SubSheet created", data: created });
+  // Initialize 4x4 table
+  const initialTable = Array.from({ length: 4 }).map(() => ({
+    cells: Array.from({ length: 4 }).map(() => ({ value: "" }))
+  }));
+
+  const newSheet = await SubSheet.create({
+    companyId,
+    headType,
+    serviceName,
+    period,
+    heading,
+    table: initialTable
+  });
+
+  res.status(201).json({ success: true, data: newSheet });
 });
 
+// Get all subsheets for a company & headType
+export const getSubSheetsByHead = asyncHandler(async (req, res) => {
+  const { companyId, headType } = req.params;
+  if (!companyId || !headType)
+    return res.status(400).json({ success: false, msg: "Required params missing" });
+
+  const sheets = await SubSheet.find({ companyId, headType }).sort({ createdAt: -1 });
+  res.status(200).json({ success: true, data: sheets });
+});
+
+// Update subsheet by ID
 export const updateSubSheet = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const patch = req.body;
-  const doc = await SubSheet.findById(id);
-  if (!doc) return res.status(404).json({ success: false, msg: "SubSheet not found" });
 
-  Object.assign(doc, patch);
-  await doc.save();
-  res.status(200).json({ success: true, msg: "SubSheet updated", data: doc });
+  const sheet = await SubSheet.findById(id);
+  if (!sheet) return res.status(404).json({ success: false, msg: "Sheet not found" });
+
+  Object.assign(sheet, patch);
+  await sheet.save();
+
+  res.status(200).json({ success: true, data: sheet });
 });
 
-export const getSubSheet = asyncHandler(async (req, res) => {
+// Delete subsheet by ID
+export const deleteSubSheet = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const doc = await SubSheet.findById(id);
-  if (!doc) return res.status(404).json({ success: false, msg: "SubSheet not found" });
-  res.status(200).json({ success: true, data: doc });
-});
+  const sheet = await SubSheet.findById(id);
+  if (!sheet) return res.status(404).json({ success: false, msg: "Sheet not found" });
 
-export const getSubSheetsBySheet = asyncHandler(async (req, res) => {
-  const { sheetId } = req.params;
-  const docs = await SubSheet.find({ sheetId }).sort({ createdAt: -1 });
-  res.status(200).json({ success: true, data: docs });
+  await SubSheet.findByIdAndDelete(id);
+  res.status(200).json({ success: true, msg: "SubSheet deleted" });
 });
