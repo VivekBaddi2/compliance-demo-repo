@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import CompanyNavbar from "../components/Navbar";
 
 export default function CompanyDashboard() {
-  const company = JSON.parse(localStorage.getItem("companyLoggedIn") || "null");
+  const company = JSON.parse(localStorage.getItem("activeCompany") || "null"); // updated key
   const navigate = useNavigate();
 
   const [sheet, setSheet] = useState(null);
@@ -54,8 +54,8 @@ export default function CompanyDashboard() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("companyLoggedIn");
-    navigate("/admin/dashboard");
+    localStorage.removeItem("activeCompany"); // updated key
+    navigate("/admin/dashboard"); // redirect to admin dashboard
   };
 
   const handleCreateSheet = async () => {
@@ -163,8 +163,8 @@ export default function CompanyDashboard() {
     e.stopPropagation();
     setPopup({
       visible: true,
-      x: e.clientX, // use clientX directly
-      y: e.clientY, // use clientY directly
+      x: e.clientX,
+      y: e.clientY,
       period,
       service,
       head,

@@ -56,16 +56,17 @@ export default function AdminDashboard() {
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.removeItem("admin");
-        localStorage.removeItem("companyLoggedIn");
+        localStorage.removeItem("companyLoggedIn"); // optional, can remove if unused
         navigate("/");
         window.location.reload();
       }
     });
   };
 
-  const handleCompanyLogin = (company) => {
-    localStorage.setItem("companyLoggedIn", JSON.stringify(company));
-    navigate("/company/login");
+  // Open company dashboard directly
+  const handleOpenDashboard = (company) => {
+    localStorage.setItem("activeCompany", JSON.stringify(company));
+    navigate("/company/dashboard");
   };
 
   return (
@@ -108,10 +109,10 @@ export default function AdminDashboard() {
                   Assigned to you
                 </p>
                 <button
-                  onClick={() => handleCompanyLogin(company)}
+                  onClick={() => handleOpenDashboard(company)}
                   className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 active:scale-95 transition absolute bottom-4 right-4"
                 >
-                  Login
+                  Open Dashboard
                 </button>
               </div>
             ))}

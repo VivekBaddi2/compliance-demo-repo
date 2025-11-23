@@ -6,7 +6,7 @@ import { API_URL } from "../api";
 
 export default function DetailedHeadPage({ headType }) {
   const navigate = useNavigate();
-  const company = JSON.parse(localStorage.getItem("companyLoggedIn") || "{}");
+  const company = JSON.parse(localStorage.getItem("activeCompany") || "{}"); // updated key
   const companyId = company?._id;
 
   const [sheets, setSheets] = useState([]);
@@ -153,6 +153,7 @@ export default function DetailedHeadPage({ headType }) {
                     )}
                   </tr>
                 ))}
+
             </tbody>
           </table>
 

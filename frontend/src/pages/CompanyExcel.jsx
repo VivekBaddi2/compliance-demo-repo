@@ -5,19 +5,20 @@ import DetailedSheetPage from "./DetailedSheetPage";
 
 export default function CompanyExcel() {
   const navigate = useNavigate();
-  const company = JSON.parse(localStorage.getItem("companyLoggedIn"));
+  const company = JSON.parse(localStorage.getItem("activeCompany")); // updated key
   const [activeSheet, setActiveSheet] = useState("dashboard"); // dashboard or monthly/quarterly/half-yearly/yearly
   const [selectedHead, setSelectedHead] = useState(null);
 
+  // No login check needed now
   if (!company?._id) {
-    navigate("/company/login");
+    navigate("/admin/dashboard"); // redirect to admin dashboard if company not found
     return null;
   }
 
   const sheetTypes = ["dashboard", "monthly", "quarterly", "half-yearly", "yearly"];
 
   const handleLogout = () => {
-    localStorage.removeItem("companyLoggedIn");
+    localStorage.removeItem("activeCompany"); // updated key
     localStorage.removeItem("admin"); 
     navigate("/");
   };
