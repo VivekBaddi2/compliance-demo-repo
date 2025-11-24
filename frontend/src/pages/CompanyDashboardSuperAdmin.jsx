@@ -5,7 +5,7 @@ import { FaTimes, FaEdit, FaSave } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import CompanyNavbar from "../components/Navbar";
 
-export default function CompanyDashboard() {
+export default function CompanyDashboardSuperAdmin() {
   const company = JSON.parse(localStorage.getItem("activeCompany") || "null"); // updated key
   const navigate = useNavigate();
 

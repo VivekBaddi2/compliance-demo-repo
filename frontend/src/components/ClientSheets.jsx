@@ -30,7 +30,7 @@ export default function ClientSheets() {
   // Open company dashboard directly
   const handleOpenDashboard = (company) => {
     localStorage.setItem("activeCompany", JSON.stringify(company));
-    navigate("/company/dashboard");
+    navigate("/company/super-dashboard");
   };
 
   return (

@@ -5,6 +5,7 @@ const superAdminSchema = new mongoose.Schema(
   {
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    role: { type: String, required: true },
     // Optional: Keep track of created admins and companies (not mandatory)
     admins: [{ type: mongoose.Schema.Types.ObjectId, ref: "Admin" }],
     companies: [{ type: mongoose.Schema.Types.ObjectId, ref: "Company" }]

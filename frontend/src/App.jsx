@@ -11,7 +11,8 @@ import YearlyPage from "./pages/YearlyPage";
 import SendReportsPage from "./pages/SendReportsPage";
 
 // Company pages
-import CompanyDashboard from "./pages/CompanyDashboard";
+import CompanyDashboardSuperAdmin from "./pages/CompanyDashboardSuperAdmin";
+import CompanyDashboardAdmin from "./pages/CompanyDashboardAdmin";
 import DetailedSheetPage from "./pages/DetailedSheetPage";
 
 export default function App() {
@@ -33,14 +34,17 @@ export default function App() {
         {/* Admin Dashboard */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
-        {/* Company Dashboard */}
-        <Route path="/company/dashboard" element={<CompanyDashboard />} />
+        {/* Company Dashboard for super admin */}
+        <Route path="/company/super-dashboard" element={<CompanyDashboardSuperAdmin />} />
+
+        {/* Company dashboard for admin */}
+        <Route path="/company/admin-dashboard" element={<CompanyDashboardAdmin />} />
 
         {/* Detailed Sheet Page */}
         <Route path="/company/sheet/:id" element={<DetailedSheetPage />} />
 
         {/* Redirect /company/sheet without ID to dashboard */}
-        <Route path="/company/sheet" element={<CompanyDashboard />} />
+        <Route path="/company/sheet" element={<CompanyDashboardSuperAdmin />} />
 
         {/* Monthly Page */}
         <Route path="/company/monthly" element={<MonthlyPage />} />
@@ -50,7 +54,7 @@ export default function App() {
 
         {/* Half Yearly Page */}
         <Route path="/company/half-yearly" element={<HalfYearlyPage />} />
-        
+
         {/* Yearly Page */}
         <Route path="/company/yearly" element={<YearlyPage />} />
         {/* Send Reports Page */}

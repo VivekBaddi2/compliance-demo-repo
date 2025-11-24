@@ -66,7 +66,7 @@ export default function AdminDashboard() {
   // Open company dashboard directly
   const handleOpenDashboard = (company) => {
     localStorage.setItem("activeCompany", JSON.stringify(company));
-    navigate("/company/dashboard");
+    navigate("/company/admin-dashboard");
   };
 
   return (
