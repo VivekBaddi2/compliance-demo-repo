@@ -8,6 +8,7 @@ export default function CompanyNavbar() {
     { label: "Quarterly", path: "/company/quarterly" },
     { label: "Half Yearly", path: "/company/half-yearly" },
     { label: "Yearly", path: "/company/yearly" },
+    { label: "Send Reports", path: "/company/send-reports" }
   ];
 
   return (

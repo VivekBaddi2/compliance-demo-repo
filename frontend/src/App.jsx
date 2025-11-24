@@ -8,6 +8,7 @@ import MonthlyPage from "./pages/MonthlyPage";
 import QuarterlyPage from "./pages/QuarterlyPage";
 import HalfYearlyPage from "./pages/HalfYearlyPage";
 import YearlyPage from "./pages/YearlyPage";
+import SendReportsPage from "./pages/SendReportsPage";
 
 // Company pages
 import CompanyDashboard from "./pages/CompanyDashboard";
@@ -52,6 +53,8 @@ export default function App() {
         
         {/* Yearly Page */}
         <Route path="/company/yearly" element={<YearlyPage />} />
+        {/* Send Reports Page */}
+        <Route path="/company/send-reports" element={<SendReportsPage />} />
       </Routes>
     </Router>
   );
