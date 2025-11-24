@@ -274,6 +274,25 @@ export default function CompanyDashboardAdmin() {
   };
 
   if (loading) return <div>Loading...</div>;
+if (!sheet || !sheet._id) {
+  return (
+    <>
+      <CompanyNavbar />
+      <div className="p-4 text-center text-xl font-semibold text-gray-600">
+        No Sheets Created
+      </div>
+
+      <div className="flex justify-center mt-4">
+        <button
+          onClick={() => navigate("/admin/dashboard")}
+          className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
+        >
+          Back
+        </button>
+      </div>
+    </>
+  );
+}
 
   return (
     <>
