@@ -33,6 +33,34 @@ export default function CompanyDashboardSuperAdmin() {
     { key: "late", label: "⏰" },
   ];
 
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const generateMonthYearList = () => {
+    const start = new Date(2025, 3); // April 2025 (month index 3)
+    const end = new Date(2040, 2); // March 2040
+    const list = [];
+    const cur = new Date(start);
+    while (cur <= end) {
+      list.push(`${monthNames[cur.getMonth()]} ${cur.getFullYear()}`);
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    return list;
+  };
+
+  const monthList = generateMonthYearList();
+
   const fetch = async () => {
     if (!company?._id) return;
     setLoading(true);
@@ -52,6 +80,16 @@ export default function CompanyDashboardSuperAdmin() {
   useEffect(() => {
     fetch();
   }, []);
+
+
+  const parsePeriodToDate = (p) => {
+  if (!p) return new Date(0);
+  const [month, year] = p.split(" ");
+  const m = monthNames.indexOf(month);
+  return new Date(Number(year), m, 1);
+};
+const sortedDashboard = sheet?.dashboard ? [...sheet.dashboard].sort((a, b) => parsePeriodToDate(b.period) - parsePeriodToDate(a.period)) : [];
+
 
   const handleCreateSheet = async () => {
     if (!company?._id) return alert("Company required");
@@ -172,7 +210,7 @@ export default function CompanyDashboardSuperAdmin() {
   };
 
   const openSubSheet = async (period, serviceName, headType) => {
-    const row = sheet.dashboard.find((r) => r.period === period);
+    const row = sortedDashboard.find((r) => r.period === period);
     const cell = row.services?.[serviceName]?.[headType];
     if (cell?.subSheetId) {
       navigate(`/company/sheet/${cell.subSheetId}`);
@@ -217,7 +255,7 @@ export default function CompanyDashboardSuperAdmin() {
   const handleSave = async () => {
     if (dirtyCells.size === 0) {
       setEditMode(false);
-      return alert("No changes");
+      return alert("Saved");
     }
     const updates = Array.from(dirtyCells.values());
     try {
@@ -267,7 +305,7 @@ export default function CompanyDashboardSuperAdmin() {
                   <FaSave /> Save
                 </button>
                 <button
-                  onClick={() => navigate("/admin/dashboard")}
+                  onClick={() => navigate("/super-admin/dashboard")}
                   className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 active:scale-95 transition"
                 >
                   Back
@@ -283,12 +321,19 @@ export default function CompanyDashboardSuperAdmin() {
           <>
             {/* controls */}
             <div className="flex gap-2 mb-3">
-              <input
+              <select
                 value={newPeriod}
                 onChange={(e) => setNewPeriod(e.target.value)}
                 className="border px-2 py-1"
-                placeholder="Add period"
-              />
+              >
+                <option value="">Select Period</option>
+                {monthList.map((m, i) => (
+                  <option key={i} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+
               <button
                 onClick={handleAddPeriod}
                 className="px-3 py-1 bg-blue-500 text-white rounded"
@@ -319,6 +364,7 @@ export default function CompanyDashboardSuperAdmin() {
                 Add Service
               </button>
             </div>
+            
 
             {/* Table */}
             <div className="overflow-auto border rounded relative">
@@ -371,7 +417,7 @@ export default function CompanyDashboardSuperAdmin() {
                 </thead>
 
                 <tbody>
-                  {sheet.dashboard.map((row) => (
+                  {sortedDashboard.map((row) => (
                     <tr key={row.period}>
                       <td className="border px-2 py-1 w-36 flex justify-between items-center">
                         <span className="text-center">{row.period}</span>
