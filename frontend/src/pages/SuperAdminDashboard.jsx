@@ -9,6 +9,30 @@ export default function SuperAdminDashboard() {
   // Admin state
   const [admins, setAdmins] = useState([]);
   const [newAdmin, setNewAdmin] = useState({ username: "", password: "" });
+  
+  // Modal state
+const [showModal, setShowModal] = useState(false);
+const [viewCompany, setViewCompany] = useState(null);
+
+
+const formatKey = (key) => {
+    const words = key
+      .replace(/([A-Z])/g, " $1")   // camelCase → separate words
+      .replace(/_/g, " ")           // snake_case → spaces
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1));
+    return words.join(" ");
+  };
+const openModal = (company) => {
+  setViewCompany(company);
+  setShowModal(true);
+};
+
+const closeModal = () => {
+  setShowModal(false);
+  setViewCompany(null);
+};
+
 
   // Company state
   const [companies, setCompanies] = useState([]);
@@ -30,6 +54,7 @@ export default function SuperAdminDashboard() {
     PTEmployee: "",
   });
 
+  
   // Allotment state
   const [selectedAdmin, setSelectedAdmin] = useState("");
   const [selectedCompanies, setSelectedCompanies] = useState([]);
@@ -598,9 +623,6 @@ const handleEditCompany = async (company) => {
           <tr className="bg-gray-200">
             <th className="border px-4 py-2">Client Name</th>
             <th className="border px-4 py-2">Structure</th>
-            <th className="border px-4 py-2">CIN</th>
-            <th className="border px-4 py-2">PAN</th>
-            <th className="border px-4 py-2">GST</th>
             <th className="border px-4 py-2">Admin Assigned</th>
             <th className="border px-4 py-2">Actions</th>
           </tr>
@@ -610,13 +632,16 @@ const handleEditCompany = async (company) => {
             <tr key={company._id} className="hover:bg-gray-50">
               <td className="border px-4 py-2">{company.clientName}</td>
               <td className="border px-4 py-2">{company.structure}</td>
-              <td className="border px-4 py-2">{company.cin}</td>
-              <td className="border px-4 py-2">{company.pan}</td>
-              <td className="border px-4 py-2">{company.gst}</td>
               <td className="border px-4 py-2">
                 {company.adminId?.username || "None"}
               </td>
               <td className="border px-4 py-2 space-x-2">
+                <button
+    onClick={() => openModal(company)}
+    className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+  >
+    View
+  </button>
                 <button
                   onClick={() => handleEditCompany(company)}
                   className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
@@ -810,6 +835,50 @@ const handleEditCompany = async (company) => {
     <ClientSheets />
   </div>
 )}
+
+{/* Company Details Modal */}
+{showModal && viewCompany && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 p-4">
+    <div className="bg-white p-6 rounded-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto relative shadow-lg">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">
+        Company Details
+      </h2>
+      <button
+        onClick={closeModal}
+        className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 font-bold text-2xl"
+      >
+        ×
+      </button>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full border border-gray-200 rounded-lg">
+          <tbody>
+            {Object.entries(viewCompany)
+              .filter(
+                ([key]) =>
+                  !["_id", "admin", "adminId", "createdAt", "updatedAt",  "__v"].includes(
+                    key
+                  )
+              )
+              .map(([key, value]) => (
+                <tr key={key} className="border-b last:border-b-0">
+                  <td className="px-4 py-3 font-semibold text-gray-700 bg-gray-50 w-1/3">
+                    {formatKey(key)}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 break-words">
+                    {typeof value === "boolean" ? (value ? "Yes" : "No") : value?.toString()}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
+  
 }
+
