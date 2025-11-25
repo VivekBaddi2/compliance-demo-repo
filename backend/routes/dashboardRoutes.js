@@ -7,7 +7,9 @@ import {
   removeServiceFromHead,
   updateCells,
   getCompanyDashboard,
-  deleteDashboardRow
+  deleteDashboardRow,
+  addHead,
+  removeHead
 } from "../controllers/dashboardController.js";
 
 const router = express.Router();
@@ -19,6 +21,7 @@ router.post("/service/remove", removeServiceFromHead);
 router.put("/cells/update", updateCells);
 router.get("/get/:companyId", getCompanyDashboard);
 router.delete("/row/:sheetId/:period", deleteDashboardRow);
-
+router.post("/head/add", addHead);
+router.post("/head/remove", removeHead);
 
 export default router;

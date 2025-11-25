@@ -26,7 +26,8 @@ export default function CompanyDashboardAdmin() {
   });
   const originalRef = useRef(null);
 
-  const heads = ["Monthly", "Quarterly", "HalfYearly", "Yearly"];
+  const heads = sheet?.serviceHeads ? Object.keys(sheet.serviceHeads) : [];
+
   const symbols = [
     { key: "tick", label: "✔️" },
     { key: "cross", label: "❌" },

@@ -9,6 +9,9 @@ export default function CompanyDashboardSuperAdmin() {
   const company = JSON.parse(localStorage.getItem("activeCompany") || "null"); // updated key
   const navigate = useNavigate();
 
+  const [newHead, setNewHead] = useState("");
+  const [headToRemove, setHeadToRemove] = useState("");
+
   const [sheet, setSheet] = useState(null);
   const [loading, setLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -26,7 +29,8 @@ export default function CompanyDashboardSuperAdmin() {
   });
   const originalRef = useRef(null);
 
-  const heads = ["Monthly", "Quarterly", "HalfYearly", "Yearly"];
+  const heads = sheet?.serviceHeads ? Object.keys(sheet.serviceHeads) : [];
+
   const symbols = [
     { key: "tick", label: "✔️" },
     { key: "cross", label: "❌" },
@@ -81,15 +85,17 @@ export default function CompanyDashboardSuperAdmin() {
     fetch();
   }, []);
 
-
   const parsePeriodToDate = (p) => {
-  if (!p) return new Date(0);
-  const [month, year] = p.split(" ");
-  const m = monthNames.indexOf(month);
-  return new Date(Number(year), m, 1);
-};
-const sortedDashboard = sheet?.dashboard ? [...sheet.dashboard].sort((a, b) => parsePeriodToDate(b.period) - parsePeriodToDate(a.period)) : [];
-
+    if (!p) return new Date(0);
+    const [month, year] = p.split(" ");
+    const m = monthNames.indexOf(month);
+    return new Date(Number(year), m, 1);
+  };
+  const sortedDashboard = sheet?.dashboard
+    ? [...sheet.dashboard].sort(
+        (a, b) => parsePeriodToDate(b.period) - parsePeriodToDate(a.period)
+      )
+    : [];
 
   const handleCreateSheet = async () => {
     if (!company?._id) return alert("Company required");
@@ -103,6 +109,44 @@ const sortedDashboard = sheet?.dashboard ? [...sheet.dashboard].sort((a, b) => p
     } catch (err) {
       console.error(err);
       alert("Create failed");
+    }
+  };
+
+  const handleAddHead = async () => {
+    if (!newHead?.trim()) return alert("Enter head name");
+    if (!sheet?._id) return alert("Create sheet first");
+
+    try {
+      // endpoint: adjust if your backend route is different
+      await axios.post(`${API_URL}/dashboard/head/add`, {
+        sheetId: sheet._id,
+        headName: newHead.trim(),
+      });
+      setNewHead("");
+      await fetch(); // refresh sheet so heads update in UI
+      alert("Head added");
+    } catch (err) {
+      console.error("add head:", err);
+      alert(err.response?.data?.msg || "Add head failed");
+    }
+  };
+
+  const handleRemoveHead = async () => {
+    if (!headToRemove) return alert("Select a head to remove");
+    if (!sheet?._id) return alert("Create sheet first");
+
+    if (!window.confirm(`Remove head "${headToRemove}"?`)) return;
+
+    try {
+      await axios.post(`${API_URL}/dashboard/head/remove`, {
+        sheetId: sheet._id,
+        headType: headToRemove,
+      });
+      setHeadToRemove("");
+      await fetch();
+    } catch (err) {
+      console.error(err);
+      alert("Remove head failed");
     }
   };
 
@@ -125,6 +169,9 @@ const sortedDashboard = sheet?.dashboard ? [...sheet.dashboard].sort((a, b) => p
   const handleAddService = async () => {
     if (!newServiceName) return alert("Enter service name");
     if (!sheet?._id) return alert("Create sheet first");
+    if (!sheet?.serviceHeads || !sheet.serviceHeads[newServiceHead]) {
+      return alert("Selected head doesn't exist. Add the head first.");
+    }
     try {
       await axios.post(`${API_URL}/dashboard/service/add`, {
         sheetId: sheet._id,
@@ -169,14 +216,15 @@ const sortedDashboard = sheet?.dashboard ? [...sheet.dashboard].sort((a, b) => p
     setSheet((prev) => {
       const copy = JSON.parse(JSON.stringify(prev));
       const row = copy.dashboard.find((r) => r.period === period);
-      if (!row.services[serviceName]) {
-        row.services[serviceName] = {
-          Monthly: { symbol: "", notes: "" },
-          Quarterly: { symbol: "", notes: "" },
-          HalfYearly: { symbol: "", notes: "" },
-          Yearly: { symbol: "", notes: "" },
-        };
-      }
+      if (!row.services[serviceName]) row.services[serviceName] = {};
+      const dynamicHeads = sheet?.serviceHeads
+        ? Object.keys(sheet.serviceHeads)
+        : [];
+      dynamicHeads.forEach((h) => {
+        if (!row.services[serviceName][h])
+          row.services[serviceName][h] = { symbol: "", notes: "" };
+      });
+
       row.services[serviceName][headType] = {
         ...row.services[serviceName][headType],
         ...patch,
@@ -320,7 +368,8 @@ const sortedDashboard = sheet?.dashboard ? [...sheet.dashboard].sort((a, b) => p
         ) : (
           <>
             {/* controls */}
-            <div className="flex gap-2 mb-3">
+            <div className="flex flex-wrap gap-2 mb-3">
+              {/* Add Period */}
               <select
                 value={newPeriod}
                 onChange={(e) => setNewPeriod(e.target.value)}
@@ -341,6 +390,42 @@ const sortedDashboard = sheet?.dashboard ? [...sheet.dashboard].sort((a, b) => p
                 Add Period
               </button>
 
+              {/* Add Head */}
+              <input
+                value={newHead}
+                onChange={(e) => setNewHead(e.target.value)}
+                className="border px-2 py-1"
+                placeholder="New head (e.g. Audit)"
+              />
+              <button
+                onClick={handleAddHead}
+                className="px-3 py-1 bg-indigo-600 text-white rounded"
+              >
+                Add Head
+              </button>
+
+              {/* Remove Head (Step-4 Added) */}
+              <select
+                value={headToRemove}
+                onChange={(e) => setHeadToRemove(e.target.value)}
+                className="border px-2 py-1"
+              >
+                <option value="">Select head to remove</option>
+                {heads.map((h) => (
+                  <option key={h} value={h}>
+                    {h}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={handleRemoveHead}
+                className="px-3 py-1 bg-red-600 text-white rounded"
+              >
+                Remove Head
+              </button>
+
+              {/* Add Service */}
               <select
                 value={newServiceHead}
                 onChange={(e) => setNewServiceHead(e.target.value)}
@@ -357,6 +442,7 @@ const sortedDashboard = sheet?.dashboard ? [...sheet.dashboard].sort((a, b) => p
                 className="border px-2 py-1"
                 placeholder="New service"
               />
+
               <button
                 onClick={handleAddService}
                 className="px-3 py-1 bg-green-500 text-white rounded"
@@ -364,7 +450,6 @@ const sortedDashboard = sheet?.dashboard ? [...sheet.dashboard].sort((a, b) => p
                 Add Service
               </button>
             </div>
-            
 
             {/* Table */}
             <div className="overflow-auto border rounded relative">
@@ -507,3 +592,4 @@ const sortedDashboard = sheet?.dashboard ? [...sheet.dashboard].sort((a, b) => p
     </>
   );
 }
+

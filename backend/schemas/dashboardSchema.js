@@ -1,24 +1,23 @@
 // schemas/companySheet.js
 import mongoose from "mongoose";
 
+// Each cell under a head for a service
 const headCellSchema = new mongoose.Schema({
   symbol: { type: String, enum: ["tick", "cross", "late", ""], default: "" },
   notes: { type: String, default: "" },
   subSheetId: { type: mongoose.Schema.Types.ObjectId, ref: "SubSheet", default: null } // link to detailed sub-sheet
 }, { _id: false });
 
-const serviceCellsSchema = new mongoose.Schema({
-  Monthly: { type: headCellSchema, default: () => ({}) },
-  Quarterly: { type: headCellSchema, default: () => ({}) },
-  HalfYearly: { type: headCellSchema, default: () => ({}) },
-  Yearly: { type: headCellSchema, default: () => ({}) },
-}, { _id: false });
+// Each service's cells for all heads are dynamic now
+const serviceCellsSchema = new mongoose.Schema({}, { _id: false, strict: false });
+// ✅ strict: false allows dynamic head keys (Monthly, Quarterly, or custom heads)
 
+// Each row (period) in the dashboard
 const dashboardRowSchema = new mongoose.Schema({
-  period: { type: String, required: true }, // e.g., "April 2025", "Q1 2025", "H1 2025", "2025"
+  period: { type: String, required: true }, // e.g., "April 2025", "Q1 2025", etc.
   services: {
-    // plain object: keys = serviceName, value = serviceCellsSchema
-    type: Object,
+    type: Map,
+    of: serviceCellsSchema, // serviceName => dynamic head cells
     default: {}
   }
 }, { _id: true });
@@ -26,15 +25,14 @@ const dashboardRowSchema = new mongoose.Schema({
 const companySheetSchema = new mongoose.Schema({
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true, unique: true },
 
-  // lists of services grouped by head; used to render columns / add new services
+  // serviceHeads = headName => array of services under that head
   serviceHeads: {
-    Monthly: [{ type: String }],
-    Quarterly: [{ type: String }],
-    HalfYearly: [{ type: String }],
-    Yearly: [{ type: String }],
+    type: Map,
+    of: [String],
+    default: {}
   },
 
-  // dashboard: list of rows (periods) each with services map
+  // dashboard rows
   dashboard: [dashboardRowSchema],
 
 }, { timestamps: true });
