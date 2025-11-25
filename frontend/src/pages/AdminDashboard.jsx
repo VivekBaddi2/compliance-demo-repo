@@ -56,7 +56,7 @@ export default function AdminDashboard() {
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.removeItem("admin");
-        localStorage.removeItem("companyLoggedIn"); // optional, can remove if unused
+        localStorage.removeItem("companyLoggedIn"); // optional
         navigate("/");
         window.location.reload();
       }
@@ -102,15 +102,12 @@ export default function AdminDashboard() {
                 className="p-4 bg-blue-50 rounded-lg shadow hover:shadow-lg transition relative"
               >
                 <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                  {company.username}
+                  {company.clientName} {/* updated for new schema */}
                 </h3>
-                <p className="text-gray-600 mb-4">
-                  {/* Optionally, add more info here */}
-                  Assigned to you
-                </p>
+                <p className="text-gray-600 mb-4">Assigned to you</p>
                 <button
                   onClick={() => handleOpenDashboard(company)}
-                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 active:scale-95 transition absolute bottom-4 right-4"
+                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 active:scale-95 transition focus:outline-none absolute bottom-4 right-4"
                 >
                   Open Dashboard
                 </button>

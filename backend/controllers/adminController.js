@@ -19,11 +19,12 @@ export const loginAdmin = asyncHandler(async (req, res) => {
 export const getAssignedCompanies = asyncHandler(async (req, res) => {
   const { adminId } = req.params;
 
-  const admin = await Admin.findById(adminId).populate("assignedCompanies", "username");
+  const admin = await Admin.findById(adminId).populate("assignedCompanies", "clientName structure");
   if (!admin) return res.status(404).json({ message: "Admin not found" });
 
   res.status(200).json({ success: true, assignedCompanies: admin.assignedCompanies });
 });
+
 
 // ✅ Update admin's own password
 export const updatePassword = asyncHandler(async (req, res) => {

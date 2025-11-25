@@ -1,30 +1,35 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 
 const companySchema = new mongoose.Schema({
-  username: {
+  clientName: {                     
     type: String,
     required: true,
     unique: true,
   },
-  password: {
+  structure: {                    
     type: String,
+    enum: ["Company", "LLP", "Partnership Firm", "Trust", "Proprietor", "AOP"],
     required: true,
   },
+  cin: { type: String },
+  pan: { type: String },
+  gst: { type: String },
+  dateOfIncorporation: { type: Date }, // date field
+  address: { type: String },
+  phone: { type: String },
+  email: { type: String },
+  udhyamAdhaar: { type: String },
+  udhyamAdhaarCategory: { type: String },
+  pf: { type: String },
+  esi: { type: String },
+  ptEmployer: { type: String },
+  ptEmployee: { type: String },
   adminId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Admin",
-    default: null, // can be assigned later
+    default: null,
   },
-} , { timestamps: true });
-
-// Hash password before save
-companySchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
+}, { timestamps: true });
 
 const Company = mongoose.model("Company", companySchema);
 export default Company;

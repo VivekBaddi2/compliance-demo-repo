@@ -103,19 +103,58 @@ export const createAdminBySuperAdmin = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, msg: "Admin created", data: admin });
 });
 
-// Create Company (by Super Admin)
+// Create Company by Super Admin
 export const createCompanyBySuperAdmin = asyncHandler(async (req, res) => {
-  const { username, password } = req.body; // no adminId needed here
-  if (!username || !password)
-    return res.status(400).json({ success: false, msg: "All fields required" });
+  const {
+    clientName,
+    structure,
+    cin,
+    pan,
+    gst,
+    dateOfIncorporation,
+    address,
+    phone,
+    email,
+    udhyamAdhaar,
+    udhyamAdhaarCategory,
+    pf,
+    esi,
+    ptEmployer,
+    ptEmployee,
+    adminId
+  } = req.body;
 
-  const existing = await Company.findOne({ username });
-  if (existing) return res.status(400).json({ success: false, msg: "Company already exists" });
+  if (!clientName || !structure) {
+    return res.status(400).json({ success: false, msg: "Client Name and Structure are required" });
+  }
 
-  const company = await Company.create({ username, password }); // adminId will be null initially
+  const existing = await Company.findOne({ clientName });
+  if (existing) {
+    return res.status(400).json({ success: false, msg: "Company already exists" });
+  }
+
+  const company = await Company.create({
+    clientName,
+    structure,
+    cin,
+    pan,
+    gst,
+    dateOfIncorporation,
+    address,
+    phone,
+    email,
+    udhyamAdhaar,
+    udhyamAdhaarCategory,
+    pf,
+    esi,
+    ptEmployer,
+    ptEmployee,
+    adminId: adminId || null,
+  });
 
   res.status(201).json({ success: true, msg: "Company created", data: company });
 });
+
 
 export const assignCompaniesToAdmin = asyncHandler(async (req, res) => {
   const { adminId, companyIds } = req.body;
@@ -153,14 +192,17 @@ export const reallotCompanies = asyncHandler(async (req, res) => {
 });
 
 export const getAllAdminsWithCompanies = asyncHandler(async (req, res) => {
-  const admins = await Admin.find().populate("assignedCompanies", "username");
+  // Populate assignedCompanies with clientName instead of username
+  const admins = await Admin.find().populate("assignedCompanies", "clientName");
   res.status(200).json({ success: true, data: admins });
 });
 
 export const getAllCompaniesWithAdmins = asyncHandler(async (req, res) => {
-  const companies = await Company.find().populate("adminId", "username");
+  // Populate adminId with username or other admin fields as needed
+  const companies = await Company.find().populate("adminId", "username"); 
   res.status(200).json({ success: true, data: companies });
 });
+
 
 
 export const deleteAdmin = asyncHandler(async (req, res) => {
@@ -249,13 +291,45 @@ export const updateAdminBySuperAdmin = asyncHandler(async (req, res) => {
 // Update company (SuperAdmin)
 export const updateCompanyBySuperAdmin = asyncHandler(async (req, res) => {
   const { companyId } = req.params;
-  const { username, password } = req.body;
+  const {
+    clientName,
+    structure,
+    cin,
+    pan,
+    gst,
+    dateOfIncorporation,
+    address,
+    phone,
+    email,
+    udhyamAdhaar,
+    udhyamAdhaarCategory,
+    pf,
+    esi,
+    ptEmployer,
+    ptEmployee,
+    adminId
+  } = req.body;
 
   const company = await Company.findById(companyId);
   if (!company) return res.status(404).json({ success: false, msg: "Company not found" });
 
-  if (username) company.username = username;
-  if (password) company.password = password; // hashed by Company's pre-save hook
+  // Update fields if provided
+  if (clientName) company.clientName = clientName;
+  if (structure) company.structure = structure;
+  if (cin) company.cin = cin;
+  if (pan) company.pan = pan;
+  if (gst) company.gst = gst;
+  if (dateOfIncorporation) company.dateOfIncorporation = dateOfIncorporation;
+  if (address) company.address = address;
+  if (phone) company.phone = phone;
+  if (email) company.email = email;
+  if (udhyamAdhaar) company.udhyamAdhaar = udhyamAdhaar;
+  if (udhyamAdhaarCategory) company.udhyamAdhaarCategory = udhyamAdhaarCategory;
+  if (pf) company.pf = pf;
+  if (esi) company.esi = esi;
+  if (ptEmployer) company.ptEmployer = ptEmployer;
+  if (ptEmployee) company.ptEmployee = ptEmployee;
+  if (adminId) company.adminId = adminId;
 
   await company.save();
 
