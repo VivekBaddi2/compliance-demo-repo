@@ -93,8 +93,8 @@ export default function CompanyDashboardSuperAdmin() {
   };
   const sortedDashboard = sheet?.dashboard
     ? [...sheet.dashboard].sort(
-        (a, b) => parsePeriodToDate(b.period) - parsePeriodToDate(a.period)
-      )
+      (a, b) => parsePeriodToDate(b.period) - parsePeriodToDate(a.period)
+    )
     : [];
 
   const handleCreateSheet = async () => {
@@ -217,8 +217,8 @@ export default function CompanyDashboardSuperAdmin() {
       const copy = JSON.parse(JSON.stringify(prev));
       const row = copy.dashboard.find((r) => r.period === period);
       if (!row.services[serviceName]) row.services[serviceName] = {};
-      const dynamicHeads = sheet?.serviceHeads
-        ? Object.keys(sheet.serviceHeads)
+      const dynamicHeads = prev?.serviceHeads
+        ? Object.keys(prev.serviceHeads)
         : [];
       dynamicHeads.forEach((h) => {
         if (!row.services[serviceName][h])
@@ -278,7 +278,8 @@ export default function CompanyDashboardSuperAdmin() {
       const res = await axios.post(`${API_URL}/dsheet/create`, payload);
       const created = res.data.data;
 
-      await axios.post(`${API_URL}/dashboard/cells/update`, {
+      // Use PUT for the cells update endpoint (router expects PUT)
+      await axios.put(`${API_URL}/dashboard/cells/update`, {
         sheetId: sheet._id,
         updates: [
           {
@@ -306,6 +307,7 @@ export default function CompanyDashboardSuperAdmin() {
       return alert("Saved");
     }
     const updates = Array.from(dirtyCells.values());
+    console.log("Saving updates:", updates);
     try {
       await axios.put(`${API_URL}/dashboard/cells/update`, {
         sheetId: sheet._id,
@@ -519,40 +521,40 @@ export default function CompanyDashboardSuperAdmin() {
                       {heads.flatMap((head) =>
                         sheet.serviceHeads[head]?.length
                           ? sheet.serviceHeads[head].map((service) => {
-                              const cell = row.services?.[service]?.[head] || {
-                                symbol: "",
-                                notes: "",
-                              };
-                              const symbolObj = symbols.find(
-                                (s) => s.key === cell.symbol
-                              );
-                              return (
-                                <td
-                                  key={service}
-                                  className="border px-2 py-1 cursor-pointer text-center relative"
-                                  onClick={(e) =>
-                                    editMode &&
-                                    openPopup(e, row.period, service, head)
-                                  }
-                                  onDoubleClick={() =>
-                                    !editMode &&
-                                    openSubSheet(row.period, service, head)
-                                  }
-                                >
-                                  <div className="text-xl">
-                                    {symbolObj?.label || ""}
-                                  </div>
-                                </td>
-                              );
-                            })
-                          : [
+                            const cell = row.services?.[service]?.[head] || {
+                              symbol: "",
+                              notes: "",
+                            };
+                            const symbolObj = symbols.find(
+                              (s) => s.key === cell.symbol
+                            );
+                            return (
                               <td
-                                key={head}
-                                className="border px-2 py-1 text-center"
+                                key={`${head}|${service}`}
+                                className="border px-2 py-1 cursor-pointer text-center relative"
+                                onClick={(e) =>
+                                  editMode &&
+                                  openPopup(e, row.period, service, head)
+                                }
+                                onDoubleClick={() =>
+                                  !editMode &&
+                                  openSubSheet(row.period, service, head)
+                                }
                               >
-                                -
-                              </td>,
-                            ]
+                                <div className="text-xl">
+                                  {symbolObj?.label || ""}
+                                </div>
+                              </td>
+                            );
+                          })
+                          : [
+                            <td
+                              key={head}
+                              className="border px-2 py-1 text-center"
+                            >
+                              -
+                            </td>,
+                          ]
                       )}
                     </tr>
                   ))}

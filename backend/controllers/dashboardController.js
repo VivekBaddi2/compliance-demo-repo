@@ -280,16 +280,17 @@ export const removeServiceFromHead = asyncHandler(async (req, res) => {
 
 export const updateCells = asyncHandler(async (req, res) => {
   const { sheetId, updates } = req.body;
+
   if (!sheetId || !Array.isArray(updates))
     return res
       .status(400)
       .json({ success: false, msg: "sheetId and updates array required" });
 
   const sheet = await CompanySheet.findById(sheetId);
-  if (!sheet)
-    return res.status(404).json({ success: false, msg: "Sheet not found" });
+  if (!sheet) return res.status(404).json({ success: false, msg: "Sheet not found" });
 
-  for (const u of updates) {
+  for (let i = 0; i < updates.length; i++) {
+    const u = updates[i];
     const {
       period,
       serviceName,
@@ -299,26 +300,42 @@ export const updateCells = asyncHandler(async (req, res) => {
       createSubSheet = false,
       subSheetPayload = {},
     } = u;
-    if (!period || !serviceName || !headType) continue;
-    const row = sheet.dashboard.find((r) => r.period === period);
-    if (!row) continue;
 
-    // dynamic head validation
+    if (!period || !serviceName || !headType) continue;
+
+    const rowIndex = sheet.dashboard.findIndex((r) => r.period === period);
+    if (rowIndex === -1) continue;
+    const row = sheet.dashboard[rowIndex];
+
     if (!sheet.serviceHeads.has(headType)) continue;
 
-    if (!row.services) row.services = {};
-    if (!row.services[serviceName]) row.services[serviceName] = {};
-
-    if (!row.services[serviceName][headType]) {
-      row.services[serviceName][headType] = {
-        symbol: "",
-        notes: "",
-        subSheetId: null,
-      };
+    // Normalize services into a plain JS object, update, then assign back
+    let servicesPlain = {};
+    if (row.services && (row.services instanceof Map || row.services.constructor?.name === 'MongooseMap')) {
+      for (const [k, v] of row.services.entries()) {
+        try {
+          servicesPlain[k] = v && typeof v.toObject === 'function' ? v.toObject() : JSON.parse(JSON.stringify(v || {}));
+        } catch (e) {
+          servicesPlain[k] = v || {};
+        }
+      }
+    } else if (row.services && typeof row.services === 'object') {
+      servicesPlain = { ...row.services };
+    } else {
+      servicesPlain = {};
     }
 
-    row.services[serviceName][headType].symbol = symbol;
-    row.services[serviceName][headType].notes = notes;
+    if (!servicesPlain[serviceName]) servicesPlain[serviceName] = {};
+    if (!servicesPlain[serviceName][headType]) {
+      servicesPlain[serviceName][headType] = { symbol: "", notes: "", subSheetId: null };
+    }
+
+    servicesPlain[serviceName][headType].symbol = symbol;
+    servicesPlain[serviceName][headType].notes = notes;
+
+    // Assign the plain object back to the row so Mongoose persists it correctly
+    row.services = servicesPlain;
+    sheet.markModified(`dashboard.${rowIndex}`);
 
     if (createSubSheet) {
       const payload = {
@@ -330,18 +347,19 @@ export const updateCells = asyncHandler(async (req, res) => {
         ...subSheetPayload,
       };
       const created = await SubSheet.create(payload);
-      row.services[serviceName][headType].subSheetId = created._id;
+      servicesPlain[serviceName][headType].subSheetId = created._id;
+      row.services = servicesPlain;
+      sheet.markModified(`dashboard.${rowIndex}`);
     } else if (u.subSheetId) {
-      row.services[serviceName][headType].subSheetId = u.subSheetId;
+      servicesPlain[serviceName][headType].subSheetId = u.subSheetId;
+      row.services = servicesPlain;
+      sheet.markModified(`dashboard.${rowIndex}`);
     }
   }
 
-  sheet.markModified("dashboard");
   await sheet.save();
 
-  res
-    .status(200)
-    .json({ success: true, msg: "Cells updated", data: sheet.dashboard });
+  res.status(200).json({ success: true, msg: "Cells updated", data: sheet.dashboard });
 });
 
 
