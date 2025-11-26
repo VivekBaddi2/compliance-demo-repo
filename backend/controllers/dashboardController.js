@@ -63,36 +63,39 @@ export const addHead = asyncHandler(async (req, res) => {
 
 export const removeHead = asyncHandler(async (req, res) => {
   const { sheetId, headType } = req.body;
-
+  console.log(headType, sheetId)
   if (!sheetId || !headType)
     return res
       .status(400)
       .json({ success: false, msg: "sheetId and headType are required" });
 
   const sheet = await CompanySheet.findById(sheetId);
+  console.log(sheet)
   if (!sheet)
     return res.status(404).json({ success: false, msg: "Sheet not found" });
 
+  console.log(sheet.serviceHeads.has(headType))
+
   // If head not present
-  if (!sheet.serviceHeads[headType])
+  if (!sheet.serviceHeads.has(headType))
     return res
       .status(400)
       .json({ success: false, msg: "Head does not exist" });
 
   // 1️⃣ Remove from serviceHeads
-  delete sheet.serviceHeads[headType];
+  sheet.serviceHeads.delete(headType);
 
   // 2️⃣ Remove data of this head from every row
-  sheet.dashboard = sheet.dashboard.map((row) => {
-    if (row.services) {
-      for (const service in row.services) {
-        if (row.services[service][headType]) {
-          delete row.services[service][headType];
-        }
-      }
-    }
-    return row;
-  });
+  // sheet.dashboard = sheet.dashboard.map((row) => {
+  //   if (row.services) {
+  //     for (const service in row.services) {
+  //       if (row.services[service][headType]) {
+  //         delete row.services[service][headType];
+  //       }
+  //     }
+  //   }
+  //   return row;
+  // });
 
   await sheet.save();
 
@@ -102,7 +105,6 @@ export const removeHead = asyncHandler(async (req, res) => {
     data: sheet,
   });
 });
-
 
 // ADD ROW — FIXED HEAD LOOP
 export const addDashboardRow = asyncHandler(async (req, res) => {

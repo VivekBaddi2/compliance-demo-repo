@@ -92,21 +92,6 @@ export default function CompanyDashboardAdmin() {
       )
     : [];
 
-  // const handleCreateSheet = async () => {
-  //     if (!company?._id) return alert("Company required");
-  //     try {
-  //         const res = await axios.post(`${API_URL}/dashboard/create`, {
-  //             companyId: company._id,
-  //         });
-  //         setSheet(res.data.data);
-  //         originalRef.current = JSON.stringify(res.data.data);
-  //         alert("Sheet created");
-  //     } catch (err) {
-  //         console.error(err);
-  //         alert("Create failed");
-  //     }
-  // };
-
   const handleAddPeriod = async () => {
     if (!newPeriod) return alert("Enter period");
     if (!sheet?._id) return alert("Create sheet first");
@@ -122,38 +107,6 @@ export default function CompanyDashboardAdmin() {
       alert("Add period failed");
     }
   };
-
-  // const handleAddService = async () => {
-  //     if (!newServiceName) return alert("Enter service name");
-  //     if (!sheet?._id) return alert("Create sheet first");
-  //     try {
-  //         await axios.post(`${API_URL}/dashboard/service/add`, {
-  //             sheetId: sheet._id,
-  //             headType: newServiceHead,
-  //             serviceName: newServiceName,
-  //         });
-  //         setNewServiceName("");
-  //         await fetch();
-  //     } catch (err) {
-  //         console.error(err);
-  //         alert("Add service failed");
-  //     }
-  // };
-
-  // const handleRemoveService = async (head, serviceName) => {
-  //     if (!window.confirm(`Remove service "${serviceName}"?`)) return;
-  //     try {
-  //         await axios.post(`${API_URL}/dashboard/service/remove`, {
-  //             sheetId: sheet._id,
-  //             headType: head,
-  //             serviceName,
-  //         });
-  //         await fetch();
-  //     } catch (err) {
-  //         console.error(err);
-  //         alert("Remove service failed");
-  //     }
-  // };
 
   const handleRemovePeriod = async (period) => {
     if (!window.confirm(`Delete row "${period}"?`)) return;
@@ -275,25 +228,25 @@ export default function CompanyDashboardAdmin() {
   };
 
   if (loading) return <div>Loading...</div>;
-if (!sheet || !sheet._id) {
-  return (
-    <>
-      <CompanyNavbar />
-      <div className="p-4 text-center text-xl font-semibold text-gray-600">
-        No Sheets Created
-      </div>
+  if (!sheet || !sheet._id) {
+    return (
+      <>
+        <CompanyNavbar />
+        <div className="p-4 text-center text-xl font-semibold text-gray-600">
+          No Sheets Created
+        </div>
 
-      <div className="flex justify-center mt-4">
-        <button
-          onClick={() => navigate("/admin/dashboard")}
-          className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
-        >
-          Back
-        </button>
-      </div>
-    </>
-  );
-}
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => navigate("/admin/dashboard")}
+            className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
+          >
+            Back
+          </button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -352,29 +305,6 @@ if (!sheet || !sheet._id) {
               >
                 Add Period
               </button>
-
-              {/* <select
-                                value={newServiceHead}
-                                onChange={(e) => setNewServiceHead(e.target.value)}
-                                className="border px-2 py-1"
-                            >
-                                {heads.map((h) => (
-                                    <option key={h}>{h}</option>
-                                ))}
-                            </select> */}
-
-              {/* <input
-                                value={newServiceName}
-                                onChange={(e) => setNewServiceName(e.target.value)}
-                                className="border px-2 py-1"
-                                placeholder="New service"
-                            /> */}
-              {/* <button
-                                onClick={handleAddService}
-                                className="px-3 py-1 bg-green-500 text-white rounded"
-                            >
-                                Add Service
-                            </button> */}
             </div>
 
             {/* Table */}
