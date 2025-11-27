@@ -29,11 +29,10 @@ export default function CompanyDashboardAdmin() {
   const heads = sheet?.serviceHeads ? Object.keys(sheet.serviceHeads) : [];
 
   const symbols = [
-    { key: "tick", label: "✔️" },
+    { key: "tick", label: "✅" },
     { key: "cross", label: "❌" },
-    { key: "late", label: "⏰" },
+    { key: "late", label: "❗" },
   ];
-
   const monthNames = [
     "January",
     "February",
@@ -108,17 +107,6 @@ export default function CompanyDashboardAdmin() {
     }
   };
 
-  const handleRemovePeriod = async (period) => {
-    if (!window.confirm(`Delete row "${period}"?`)) return;
-    try {
-      await axios.delete(`${API_URL}/dashboard/row/${sheet._id}/${period}`);
-      await fetch();
-    } catch (err) {
-      console.error(err);
-      alert("Delete row failed");
-    }
-  };
-
   const markDirty = (period, serviceName, headType, patch) => {
     setSheet((prev) => {
       const copy = JSON.parse(JSON.stringify(prev));
@@ -158,8 +146,18 @@ export default function CompanyDashboardAdmin() {
     });
   };
 
-  const selectSymbol = (symbol) => {
+  const selectSymbol = async (symbol) => {
+    // Update UI
     markDirty(popup.period, popup.service, popup.head, { symbol });
+
+    // Lock cell permanently
+    await axios.put(`${API_URL}/dashboard/cells/lock`, {
+      sheetId: sheet._id,
+      period: popup.period,
+      serviceName: popup.service,
+      headType: popup.head,
+    });
+
     setPopup({ ...popup, visible: false });
   };
 
@@ -357,18 +355,12 @@ export default function CompanyDashboardAdmin() {
                 <tbody>
                   {sortedDashboard.map((row) => (
                     <tr key={row.period}>
-                      <td className="border px-2 py-1 w-36 flex justify-between items-center">
-                        <span className="text-center">{row.period}</span>
-                        {editMode && (
-                          <button
-                            className="text-red-600"
-                            onClick={() => handleRemovePeriod(row.period)}
-                          >
-                            <FaTimes />
-                          </button>
-                        )}
+                      {/* PERIOD COLUMN */}
+                      <td className="border px-2 py-1 w-36 text-center">
+                        {row.period}
                       </td>
 
+                      {/* SERVICE CELLS */}
                       {heads.flatMap((head) =>
                         sheet.serviceHeads[head]?.length
                           ? sheet.serviceHeads[head].map((service) => {
@@ -378,18 +370,21 @@ export default function CompanyDashboardAdmin() {
                               const symbolObj = symbols.find(
                                 (s) => s.key === cell.symbol
                               );
+
                               return (
                                 <td
-                                  key={service}
+                                  key={`${row.period}_${head}_${service}`}
                                   className="border px-2 py-1 cursor-pointer text-center relative"
-                                  onClick={(e) =>
-                                    editMode &&
-                                    openPopup(e, row.period, service, head)
-                                  }
-                                  onDoubleClick={() =>
-                                    !editMode &&
-                                    openSubSheet(row.period, service, head)
-                                  }
+                                  onClick={(e) => {
+                                    if (!editMode) return;
+                                    if (cell.symbol) return; // ❌ cannot change once set
+                                    openPopup(e, row.period, service, head);
+                                  }}
+                                  onDoubleClick={() => {
+                                    if (editMode) return;
+                                    if (!cell.symbol) return; // ❌ empty -> no subsheet
+                                    openSubSheet(row.period, service, head);
+                                  }}
                                 >
                                   <div className="text-xl">
                                     {symbolObj?.label || ""}
@@ -399,7 +394,7 @@ export default function CompanyDashboardAdmin() {
                             })
                           : [
                               <td
-                                key={head}
+                                key={`${row.period}_${head}_empty`}
                                 className="border px-2 py-1 text-center"
                               >
                                 -

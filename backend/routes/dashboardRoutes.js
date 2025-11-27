@@ -9,7 +9,8 @@ import {
   getCompanyDashboard,
   deleteDashboardRow,
   addHead,
-  removeHead
+  removeHead,
+  lockCell,
 } from "../controllers/dashboardController.js";
 
 const router = express.Router();
@@ -23,5 +24,6 @@ router.get("/get/:companyId", getCompanyDashboard);
 router.delete("/row/:sheetId/:period", deleteDashboardRow);
 router.post("/head/add", addHead);
 router.post("/head/remove", removeHead);
+router.put("/cells/lock", lockCell);
 
 export default router;

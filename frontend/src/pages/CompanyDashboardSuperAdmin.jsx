@@ -31,12 +31,11 @@ export default function CompanyDashboardSuperAdmin() {
 
   const heads = sheet?.serviceHeads ? Object.keys(sheet.serviceHeads) : [];
 
-  const symbols = [
-    { key: "tick", label: "✔️" },
+const symbols = [
+    { key: "tick", label: "✅" },
     { key: "cross", label: "❌" },
-    { key: "late", label: "⏰" },
+    { key: "late", label: "❗" },
   ];
-
   const monthNames = [
     "January",
     "February",

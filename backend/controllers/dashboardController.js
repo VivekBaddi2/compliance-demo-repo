@@ -396,3 +396,24 @@ export const deleteDashboardRow = asyncHandler(async (req, res) => {
     .status(200)
     .json({ success: true, msg: "Period row deleted", data: sheet.dashboard });
 });
+
+// PUT /dashboard/cells/lock
+export const lockCell = asyncHandler(async (req, res) => {
+  const { sheetId, period, serviceName, headType } = req.body;
+
+  const sheet = await Dashboard.findById(sheetId);
+  if (!sheet) throw new Error("Sheet not found");
+
+  const row = sheet.dashboard.find(r => r.period === period);
+  if (!row) throw new Error("Period not found");
+
+  if (!row.services[serviceName]) row.services[serviceName] = {};
+  if (!row.services[serviceName][headType]) {
+    row.services[serviceName][headType] = { symbol: "", locked: false };
+  }
+
+  row.services[serviceName][headType].locked = true;
+
+  await sheet.save();
+  res.json({ success: true });
+});
