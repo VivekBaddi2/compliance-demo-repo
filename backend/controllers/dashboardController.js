@@ -401,7 +401,7 @@ export const deleteDashboardRow = asyncHandler(async (req, res) => {
 export const lockCell = asyncHandler(async (req, res) => {
   const { sheetId, period, serviceName, headType } = req.body;
 
-  const sheet = await Dashboard.findById(sheetId);
+  const sheet = await CompanySheet.findById(sheetId);
   if (!sheet) throw new Error("Sheet not found");
 
   const row = sheet.dashboard.find(r => r.period === period);

@@ -35,6 +35,7 @@ const symbols = [
     { key: "tick", label: "✅" },
     { key: "cross", label: "❌" },
     { key: "late", label: "❗" },
+     { key: "remove", label: "🗑️" },
   ];
   const monthNames = [
     "January",
@@ -251,10 +252,16 @@ const symbols = [
     });
   };
 
-  const selectSymbol = (symbol) => {
-    markDirty(popup.period, popup.service, popup.head, { symbol });
-    setPopup({ ...popup, visible: false });
-  };
+const selectSymbol = (symbol) => {
+  markDirty(
+    popup.period,
+    popup.service,
+    popup.head,
+    { symbol: symbol === "remove" ? "" : symbol } // empty string to clear
+  );
+  setPopup({ ...popup, visible: false });
+};
+
 
   const openSubSheet = async (period, serviceName, headType) => {
     const row = sortedDashboard.find((r) => r.period === period);

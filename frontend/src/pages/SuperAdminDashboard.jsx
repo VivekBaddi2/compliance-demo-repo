@@ -5,11 +5,10 @@ import ClientSheets from "../components/ClientSheets";
 
 export default function SuperAdminDashboard() {
   const [activeTab, setActiveTab] = useState("admins");
-       const handleLogout = () => {
+  const handleLogout = () => {
     localStorage.removeItem("superAdmin");
     window.location.href = "/";
   };
-
 
   // Admin state
   const [admins, setAdmins] = useState([]);
@@ -18,6 +17,8 @@ export default function SuperAdminDashboard() {
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [viewCompany, setViewCompany] = useState(null);
+
+  const [showAddCompany, setShowAddCompany] = useState(false);
 
   const formatKey = (key) => {
     const words = key
@@ -56,7 +57,6 @@ export default function SuperAdminDashboard() {
     PTEmployer: "",
     PTEmployee: "",
   });
-
 
   // Allotment state
   const [selectedAdmin, setSelectedAdmin] = useState("");
@@ -405,8 +405,6 @@ export default function SuperAdminDashboard() {
     }
   };
 
-
-
   return (
     <div className="min-h-screen p-6 bg-gray-100">
       <h1 className="text-4xl font-bold mb-6 text-center text-gray-800">
@@ -521,169 +519,13 @@ export default function SuperAdminDashboard() {
         <div className="bg-white p-6 rounded-xl shadow">
           <h2 className="text-2xl font-bold mb-4">Companies</h2>
 
-          {/* ---------------- Add Company Form ---------------- */}
-          <div className="flex flex-wrap gap-4 mb-4">
-            <input
-              type="text"
-              placeholder="Client Name"
-              value={newCompany.clientName || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, clientName: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <select
-              value={newCompany.structure || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, structure: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            >
-              <option value="">Select Structure</option>
-              {[
-                "Company",
-                "LLP",
-                "Partnership Firm",
-                "Trust",
-                "Proprietor",
-                "AOP",
-              ].map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              placeholder="CIN"
-              value={newCompany.cin || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, cin: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <input
-              type="text"
-              placeholder="PAN"
-              value={newCompany.pan || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, pan: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <input
-              type="text"
-              placeholder="GST"
-              value={newCompany.gst || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, gst: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <input
-              type="date"
-              placeholder="Date of Incorporation/DOB"
-              value={newCompany.dateOfIncorporation || ""}
-              onChange={(e) =>
-                setNewCompany({
-                  ...newCompany,
-                  dateOfIncorporation: e.target.value,
-                })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <input
-              type="text"
-              placeholder="Address"
-              value={newCompany.address || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, address: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <input
-              type="text"
-              placeholder="Phone"
-              value={newCompany.phone || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, phone: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={newCompany.email || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, email: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <input
-              type="text"
-              placeholder="Udhyam Adhaar"
-              value={newCompany.udhyamAdhaar || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, udhyamAdhaar: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <input
-              type="text"
-              placeholder="Udhyam Adhaar Category"
-              value={newCompany.udhyamAdhaarCategory || ""}
-              onChange={(e) =>
-                setNewCompany({
-                  ...newCompany,
-                  udhyamAdhaarCategory: e.target.value,
-                })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <input
-              type="text"
-              placeholder="PF"
-              value={newCompany.pf || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, pf: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <input
-              type="text"
-              placeholder="ESI"
-              value={newCompany.esi || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, esi: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <input
-              type="text"
-              placeholder="PT (Employer)"
-              value={newCompany.ptEmployer || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, ptEmployer: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-            <input
-              type="text"
-              placeholder="PT (Employee)"
-              value={newCompany.ptEmployee || ""}
-              onChange={(e) =>
-                setNewCompany({ ...newCompany, ptEmployee: e.target.value })
-              }
-              className="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
-            />
-
-            <button
-              onClick={handleAddCompany}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
-              Add Company
-            </button>
-          </div>
+          {/* Add Company Form */}
+          <button
+            onClick={() => setShowAddCompany(true)}
+            className="px-4 py-2 mb-4 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            Add Company
+          </button>
 
           {/* ---------------- Companies Table ---------------- */}
           <div className="overflow-x-auto">
@@ -728,6 +570,94 @@ export default function SuperAdminDashboard() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+      {showAddCompany && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 p-4">
+          <div className="bg-white p-6 rounded-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto relative shadow-lg">
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">
+              Add Client
+            </h2>
+            <button
+              onClick={() => setShowAddCompany(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 font-bold text-2xl"
+            >
+              ×
+            </button>
+
+            <div className="flex flex-col gap-4 mb-4">
+              {Object.keys(newCompany).map((key) => {
+                // Determine input type
+                const inputType = key.includes("date")
+                  ? "date"
+                  : key === "email"
+                  ? "email"
+                  : "text";
+
+                // For structure, use dropdown
+                if (key === "structure") {
+                  return (
+                    <div className="flex flex-col gap-1" key={key}>
+                      <label className="font-semibold text-gray-700">
+                        {formatKey(key)}:
+                      </label>
+                      <select
+                        value={newCompany.structure}
+                        onChange={(e) =>
+                          setNewCompany({
+                            ...newCompany,
+                            structure: e.target.value,
+                          })
+                        }
+                        className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                      >
+                        <option value="">Select Structure</option>
+                        {[
+                          "Company",
+                          "LLP",
+                          "Partnership Firm",
+                          "Trust",
+                          "Proprietor",
+                          "AOP",
+                        ].map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                }
+
+                // All other fields
+                return (
+                  <div className="flex flex-col gap-1" key={key}>
+                    <label className="font-semibold text-gray-700">
+                      {formatKey(key)}:
+                    </label>
+                    <input
+                      type={inputType}
+                      value={newCompany[key] || ""}
+                      onChange={(e) =>
+                        setNewCompany({ ...newCompany, [key]: e.target.value })
+                      }
+                      className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                    />
+                  </div>
+                );
+              })}
+
+              <button
+                onClick={() => {
+                  handleAddCompany();
+                  setShowAddCompany(false);
+                }}
+                className="mt-4 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"
+              >
+                Create
+              </button>
+            </div>
           </div>
         </div>
       )}
