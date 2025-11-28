@@ -559,6 +559,21 @@ export default function CompanyDashboardSuperAdmin() {
 
                     if (sources.length < 2) return alert("Select a range of at least 2 periods to merge");
 
+                    // PRE-CHECK: ensure no overlapping/already-merged cells exist inside the intended range
+                    const servicesList = sheet.serviceHeads[mergeHead] || [];
+                    for (const p of sources) {
+                      const r = sheet.dashboard.find((rr) => rr.period === p);
+                      for (const svc of servicesList) {
+                        const c = r?.services?.[svc]?.[mergeHead];
+                        if (c && c.mergedRange) {
+                          // if the mergedRange already covers multiple rows, abort to avoid overlap
+                          return alert(
+                            `Cannot merge: some rows in the selected range are already merged for head ${mergeHead}. Unmerge them first.`
+                          );
+                        }
+                      }
+                    }
+
                     // target will be the "From" period (we will expand it downwards)
                     const targetPeriod = mergeFrom;
                     const targetEndPeriod = sortedDashboard[endIdx].period;

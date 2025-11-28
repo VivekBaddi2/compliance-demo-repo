@@ -104,7 +104,7 @@ export default function DetailedHeadPage({ headType }) {
       <div className="flex justify-between mb-4 items-center">
         <h1 className="text-2xl font-bold">{headType} Details</h1>
         <div className="flex gap-2">
-          <button onClick={() => navigate("/company/dashboard")} className="px-3 py-1 bg-gray-700 text-white rounded">
+          <button onClick={() => navigate(-1)} className="px-3 py-1 bg-gray-700 text-white rounded">
             Back
           </button>
           <button onClick={toggleEdit} className="px-3 py-1 bg-blue-600 text-white rounded">

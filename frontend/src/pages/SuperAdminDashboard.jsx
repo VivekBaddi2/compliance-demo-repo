@@ -43,19 +43,19 @@ export default function SuperAdminDashboard() {
   const [newCompany, setNewCompany] = useState({
     clientName: "",
     structure: "",
-    CIN: "",
-    PAN: "",
-    GST: "",
+    cin: "",
+    pan: "",
+    gst: "",
     dateOfIncorporation: "",
     address: "",
     phone: "",
     email: "",
     udhyamAdhaar: "",
     udhyamAdhaarCategory: "",
-    PF: "",
-    ESI: "",
-    PTEmployer: "",
-    PTEmployee: "",
+    pf: "",
+    esi: "",
+    ptEmployer: "",
+    ptEmployee: "",
   });
 
   // Allotment state
@@ -131,6 +131,7 @@ export default function SuperAdminDashboard() {
       setNewAdmin({ username: "", password: "" });
       fetchAdmins();
     } catch (err) {
+      console.log(err)
       Swal.fire("Error", err.response?.data?.msg || "Server Error", "error");
     }
   };
@@ -162,9 +163,8 @@ export default function SuperAdminDashboard() {
     const { value: formValues } = await Swal.fire({
       title: "Edit Admin",
       html: `
-      <input id="swal-username" class="swal2-input" placeholder="Username" value="${
-        admin.username || ""
-      }">
+      <input id="swal-username" class="swal2-input" placeholder="Username" value="${admin.username || ""
+        }">
       <input id="swal-password" type="password" class="swal2-input" placeholder="Password" value="">
       <button id="togglePass" type="button" class="text-sm absolute top-2 right-2">👁️</button>
     `,
@@ -212,6 +212,7 @@ export default function SuperAdminDashboard() {
   // ---------------- Add Company ----------------
   const handleAddCompany = async () => {
     const { clientName, structure } = newCompany;
+    console.log(newCompany)
     if (!clientName || !structure) {
       Swal.fire("Error", "Client Name and Structure are required", "error");
       return;
@@ -275,51 +276,36 @@ export default function SuperAdminDashboard() {
     const { value: formValues } = await Swal.fire({
       title: "Edit Company",
       html: `
-      <input id="swal-clientName" class="swal2-input" placeholder="Client Name" value="${
-        company.clientName || ""
-      }">
-      <input id="swal-structure" class="swal2-input" placeholder="Structure" value="${
-        company.structure || ""
-      }">
-      <input id="swal-cin" class="swal2-input" placeholder="CIN" value="${
-        company.cin || ""
-      }">
-      <input id="swal-pan" class="swal2-input" placeholder="PAN" value="${
-        company.pan || ""
-      }">
-      <input id="swal-gst" class="swal2-input" placeholder="GST" value="${
-        company.gst || ""
-      }">
-      <input id="swal-date" type="date" class="swal2-input" placeholder="Date of Incorporation" value="${
-        company.dateOfIncorporation || ""
-      }">
-      <input id="swal-address" class="swal2-input" placeholder="Address" value="${
-        company.address || ""
-      }">
-      <input id="swal-phone" class="swal2-input" placeholder="Phone" value="${
-        company.phone || ""
-      }">
-      <input id="swal-email" type="email" class="swal2-input" placeholder="Email" value="${
-        company.email || ""
-      }">
-      <input id="swal-udhyamAdhaar" class="swal2-input" placeholder="Udhyam Adhaar" value="${
-        company.udhyamAdhaar || ""
-      }">
-      <input id="swal-udhyamAdhaarCategory" class="swal2-input" placeholder="Udhyam Adhaar Category" value="${
-        company.udhyamAdhaarCategory || ""
-      }">
-      <input id="swal-pf" class="swal2-input" placeholder="PF" value="${
-        company.pf || ""
-      }">
-      <input id="swal-esi" class="swal2-input" placeholder="ESI" value="${
-        company.esi || ""
-      }">
-      <input id="swal-ptEmployer" class="swal2-input" placeholder="PT (Employer)" value="${
-        company.ptEmployer || ""
-      }">
-      <input id="swal-ptEmployee" class="swal2-input" placeholder="PT (Employee)" value="${
-        company.ptEmployee || ""
-      }">
+      <input id="swal-clientName" class="swal2-input" placeholder="Client Name" value="${company.clientName || ""
+        }">
+      <input id="swal-structure" class="swal2-input" placeholder="Structure" value="${company.structure || ""
+        }">
+      <input id="swal-cin" class="swal2-input" placeholder="CIN" value="${company.cin || ""
+        }">
+      <input id="swal-pan" class="swal2-input" placeholder="PAN" value="${company.pan || ""
+        }">
+      <input id="swal-gst" class="swal2-input" placeholder="GST" value="${company.gst || ""
+        }">
+      <input id="swal-date" type="date" class="swal2-input" placeholder="Date of Incorporation" value="${company.dateOfIncorporation || ""
+        }">
+      <input id="swal-address" class="swal2-input" placeholder="Address" value="${company.address || ""
+        }">
+      <input id="swal-phone" class="swal2-input" placeholder="Phone" value="${company.phone || ""
+        }">
+      <input id="swal-email" type="email" class="swal2-input" placeholder="Email" value="${company.email || ""
+        }">
+      <input id="swal-udhyamAdhaar" class="swal2-input" placeholder="Udhyam Adhaar" value="${company.udhyamAdhaar || ""
+        }">
+      <input id="swal-udhyamAdhaarCategory" class="swal2-input" placeholder="Udhyam Adhaar Category" value="${company.udhyamAdhaarCategory || ""
+        }">
+      <input id="swal-pf" class="swal2-input" placeholder="PF" value="${company.pf || ""
+        }">
+      <input id="swal-esi" class="swal2-input" placeholder="ESI" value="${company.esi || ""
+        }">
+      <input id="swal-ptEmployer" class="swal2-input" placeholder="PT (Employer)" value="${company.ptEmployer || ""
+        }">
+      <input id="swal-ptEmployee" class="swal2-input" placeholder="PT (Employee)" value="${company.ptEmployee || ""
+        }">
     `,
       focusConfirm: false,
       preConfirm: () => {
@@ -424,11 +410,10 @@ export default function SuperAdminDashboard() {
         {["admins", "companies", "allotments", "clients"].map((tab) => (
           <button
             key={tab}
-            className={`px-6 py-2 rounded-lg font-semibold ${
-              activeTab === tab
-                ? "bg-blue-600 text-white"
-                : "bg-white shadow hover:bg-gray-100"
-            }`}
+            className={`px-6 py-2 rounded-lg font-semibold ${activeTab === tab
+              ? "bg-blue-600 text-white"
+              : "bg-white shadow hover:bg-gray-100"
+              }`}
             onClick={() => setActiveTab(tab)}
           >
             {tab === "clients"
@@ -488,8 +473,8 @@ export default function SuperAdminDashboard() {
                     <td className="border px-4 py-2">
                       {admin.assignedCompanies?.length > 0
                         ? admin.assignedCompanies
-                            .map((c) => c.clientName)
-                            .join(", ")
+                          .map((c) => c.clientName)
+                          .join(", ")
                         : "None"}
                     </td>
                     <td className="border px-4 py-2 space-x-2">
@@ -592,8 +577,8 @@ export default function SuperAdminDashboard() {
                 const inputType = key.includes("date")
                   ? "date"
                   : key === "email"
-                  ? "email"
-                  : "text";
+                    ? "email"
+                    : "text";
 
                 // For structure, use dropdown
                 if (key === "structure") {

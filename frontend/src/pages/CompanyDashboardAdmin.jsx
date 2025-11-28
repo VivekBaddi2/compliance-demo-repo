@@ -87,9 +87,39 @@ export default function CompanyDashboardAdmin() {
   };
   const sortedDashboard = sheet?.dashboard
     ? [...sheet.dashboard].sort(
-        (a, b) => parsePeriodToDate(b.period) - parsePeriodToDate(a.period)
-      )
+      (a, b) => parsePeriodToDate(b.period) - parsePeriodToDate(a.period)
+    )
     : [];
+
+  // compute merged spans and cells to skip based on persisted mergedRange metadata
+  const mergeSpanMap = {};
+  const skipCells = new Set();
+  if (sheet) {
+    const indexMap = {};
+    for (let i = 0; i < sortedDashboard.length; i++) indexMap[sortedDashboard[i].period] = i;
+    for (let i = 0; i < sortedDashboard.length; i++) {
+      const row = sortedDashboard[i];
+      for (const head of heads) {
+        const servicesList = sheet.serviceHeads[head] || [];
+        for (const service of servicesList) {
+          const cell = row.services?.[service]?.[head];
+          const mr = cell?.mergedRange;
+          if (!mr || !mr.from || !mr.to) continue;
+          const fromIdx = indexMap[mr.from];
+          const toIdx = indexMap[mr.to];
+          if (fromIdx === undefined || toIdx === undefined) continue;
+          const start = Math.min(fromIdx, toIdx);
+          const end = Math.max(fromIdx, toIdx);
+          const count = end - start + 1;
+          if (count <= 1) continue;
+          const startPeriod = sortedDashboard[start].period;
+          const key = `${startPeriod}|${head}|${service}`;
+          mergeSpanMap[key] = count;
+          for (let k = start + 1; k <= end; k++) skipCells.add(`${sortedDashboard[k].period}|${head}|${service}`);
+        }
+      }
+    }
+  }
 
   const handleAddPeriod = async () => {
     if (!newPeriod) return alert("Enter period");
@@ -364,42 +394,50 @@ export default function CompanyDashboardAdmin() {
                       {heads.flatMap((head) =>
                         sheet.serviceHeads[head]?.length
                           ? sheet.serviceHeads[head].map((service) => {
-                              const cell = row.services?.[service]?.[head] || {
-                                symbol: "",
-                              };
-                              const symbolObj = symbols.find(
-                                (s) => s.key === cell.symbol
-                              );
+                            const skipKey = `${row.period}|${head}|${service}`;
+                            if (skipCells.has(skipKey)) return null;
 
-                              return (
-                                <td
-                                  key={`${row.period}_${head}_${service}`}
-                                  className="border px-2 py-1 cursor-pointer text-center relative"
-                                  onClick={(e) => {
-                                    if (!editMode) return;
-                                    if (cell.symbol) return; // ❌ cannot change once set
-                                    openPopup(e, row.period, service, head);
-                                  }}
-                                  onDoubleClick={() => {
-                                    if (editMode) return;
-                                    if (!cell.symbol) return; // ❌ empty -> no subsheet
-                                    openSubSheet(row.period, service, head);
-                                  }}
-                                >
-                                  <div className="text-xl">
-                                    {symbolObj?.label || ""}
-                                  </div>
-                                </td>
-                              );
-                            })
-                          : [
+                            const cell = row.services?.[service]?.[head] || {
+                              symbol: "",
+                            };
+                            const symbolObj = symbols.find(
+                              (s) => s.key === cell.symbol
+                            );
+
+                            const spanKey = `${row.period}|${head}|${service}`;
+                            const computedSpan = mergeSpanMap[spanKey];
+                            const rowSpan = computedSpan && computedSpan > 1 ? computedSpan : undefined;
+
+                            return (
                               <td
-                                key={`${row.period}_${head}_empty`}
-                                className="border px-2 py-1 text-center"
+                                key={`${row.period}_${head}_${service}`}
+                                {...(rowSpan ? { rowSpan } : {})}
+                                className="border px-2 py-1 cursor-pointer text-center relative"
+                                onClick={(e) => {
+                                  if (!editMode) return;
+                                  if (cell.symbol) return; // ❌ cannot change once set
+                                  openPopup(e, row.period, service, head);
+                                }}
+                                onDoubleClick={() => {
+                                  if (editMode) return;
+                                  if (!cell.symbol) return; // ❌ empty -> no subsheet
+                                  openSubSheet(row.period, service, head);
+                                }}
                               >
-                                -
-                              </td>,
-                            ]
+                                <div className="text-xl">
+                                  {symbolObj?.label || ""}
+                                </div>
+                              </td>
+                            );
+                          })
+                          : [
+                            <td
+                              key={`${row.period}_${head}_empty`}
+                              className="border px-2 py-1 text-center"
+                            >
+                              -
+                            </td>,
+                          ]
                       )}
                     </tr>
                   ))}

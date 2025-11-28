@@ -85,17 +85,43 @@ export const removeHead = asyncHandler(async (req, res) => {
   // 1️⃣ Remove from serviceHeads
   sheet.serviceHeads.delete(headType);
 
-  // 2️⃣ Remove data of this head from every row
-  // sheet.dashboard = sheet.dashboard.map((row) => {
-  //   if (row.services) {
-  //     for (const service in row.services) {
-  //       if (row.services[service][headType]) {
-  //         delete row.services[service][headType];
-  //       }
-  //     }
-  //   }
-  //   return row;
-  // });
+  // 2️⃣ Remove data / metadata of this head from every row so old merged metadata doesn't persist
+  if (Array.isArray(sheet.dashboard)) {
+    for (let ri = 0; ri < sheet.dashboard.length; ri++) {
+      const row = sheet.dashboard[ri];
+      if (!row || !row.services) continue;
+
+      // Normalize row.services into a plain JS object to handle Map / MongooseMap cases
+      let servicesPlain = {};
+      if (row.services instanceof Map || row.services.constructor?.name === 'MongooseMap') {
+        try {
+          for (const [k, v] of row.services.entries()) {
+            servicesPlain[k] = v && typeof v.toObject === 'function' ? v.toObject() : JSON.parse(JSON.stringify(v || {}));
+          }
+        } catch (e) {
+          // fallback: try simple iteration
+          for (const k of row.services.keys()) {
+            const v = row.services.get(k);
+            servicesPlain[k] = v && typeof v.toObject === 'function' ? v.toObject() : JSON.parse(JSON.stringify(v || {}));
+          }
+        }
+      } else if (typeof row.services === 'object') {
+        servicesPlain = { ...row.services };
+      }
+
+      // Remove the headType entry from each service (if present)
+      for (const svc of Object.keys(servicesPlain)) {
+        if (servicesPlain[svc] && servicesPlain[svc][headType]) {
+          delete servicesPlain[svc][headType];
+        }
+        // If the service entry becomes empty, we leave it; removal of services is handled elsewhere
+      }
+
+      // Assign back the plain object so Mongoose persists deletions correctly
+      row.services = servicesPlain;
+      sheet.markModified(`dashboard.${ri}`);
+    }
+  }
 
   await sheet.save();
 
@@ -248,23 +274,49 @@ export const removeServiceFromHead = asyncHandler(async (req, res) => {
     list.includes(serviceName)
   );
 
-  sheet.dashboard.forEach((row) => {
-    if (!row.services) return;
+  // Iterate rows and update/remove service entries. Handle Map/MongooseMap shapes by
+  // normalizing to plain objects so deletions persist in MongoDB.
+  if (Array.isArray(sheet.dashboard)) {
+    for (let ri = 0; ri < sheet.dashboard.length; ri++) {
+      const row = sheet.dashboard[ri];
+      if (!row || !row.services) continue;
 
-    if (!row.services[serviceName]) return;
-
-    if (!stillPresentSomewhere) {
-      delete row.services[serviceName];
-    } else {
-      if (row.services[serviceName][headType]) {
-        row.services[serviceName][headType] = {
-          symbol: "",
-          notes: "",
-          subSheetId: null,
-        };
+      // Normalize services into a plain JS object
+      let servicesPlain = {};
+      if (row.services instanceof Map || row.services.constructor?.name === 'MongooseMap') {
+        try {
+          for (const [k, v] of row.services.entries()) {
+            servicesPlain[k] = v && typeof v.toObject === 'function' ? v.toObject() : JSON.parse(JSON.stringify(v || {}));
+          }
+        } catch (e) {
+          for (const k of row.services.keys()) {
+            const v = row.services.get(k);
+            servicesPlain[k] = v && typeof v.toObject === 'function' ? v.toObject() : JSON.parse(JSON.stringify(v || {}));
+          }
+        }
+      } else if (typeof row.services === 'object') {
+        servicesPlain = { ...row.services };
       }
+
+      if (!servicesPlain[serviceName]) continue;
+
+      if (!stillPresentSomewhere) {
+        delete servicesPlain[serviceName];
+      } else {
+        if (servicesPlain[serviceName] && servicesPlain[serviceName][headType]) {
+          servicesPlain[serviceName][headType] = {
+            symbol: "",
+            notes: "",
+            subSheetId: null,
+          };
+        }
+      }
+
+      // assign back and mark modified so Mongoose persists changes
+      row.services = servicesPlain;
+      sheet.markModified(`dashboard.${ri}`);
     }
-  });
+  }
 
   sheet.markModified("serviceHeads");
   sheet.markModified("dashboard");
