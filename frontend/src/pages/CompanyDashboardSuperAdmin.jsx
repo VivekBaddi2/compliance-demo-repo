@@ -18,6 +18,8 @@ export default function CompanyDashboardSuperAdmin() {
   const [newPeriod, setNewPeriod] = useState("");
   const [newServiceName, setNewServiceName] = useState("");
   const [newServiceHead, setNewServiceHead] = useState("Monthly");
+  const [mergeHead, setMergeHead] = useState("");
+  const [mergeFrom, setMergeFrom] = useState("");
   const [dirtyCells, setDirtyCells] = useState(new Map());
   const [popup, setPopup] = useState({
     visible: false,
@@ -31,11 +33,11 @@ export default function CompanyDashboardSuperAdmin() {
 
   const heads = sheet?.serviceHeads ? Object.keys(sheet.serviceHeads) : [];
 
-const symbols = [
+  const symbols = [
     { key: "tick", label: "✅" },
     { key: "cross", label: "❌" },
     { key: "late", label: "❗" },
-     { key: "remove", label: "🗑️" },
+    { key: "remove", label: "🗑️" },
   ];
   const monthNames = [
     "January",
@@ -51,7 +53,7 @@ const symbols = [
     "November",
     "December",
   ];
-  const generateMonthYearList = () => {
+  function generateMonthYearList() {
     const start = new Date(2025, 3); // April 2025 (month index 3)
     const end = new Date(2040, 2); // March 2040
     const list = [];
@@ -61,10 +63,8 @@ const symbols = [
       cur.setMonth(cur.getMonth() + 1);
     }
     return list;
-  };
-
+  }
   const monthList = generateMonthYearList();
-
   const fetch = async () => {
     if (!company?._id) return;
     setLoading(true);
@@ -96,6 +96,46 @@ const symbols = [
       (a, b) => parsePeriodToDate(b.period) - parsePeriodToDate(a.period)
     )
     : [];
+
+  // compute merged spans and cells to skip based on persisted mergedRange metadata
+  // Use indices in sortedDashboard so rowSpan works regardless of sort order
+  const mergeSpanMap = {};
+  const skipCells = new Set();
+  if (sheet) {
+    // map period -> index in sortedDashboard
+    const indexMap = {};
+    for (let i = 0; i < sortedDashboard.length; i++) {
+      indexMap[sortedDashboard[i].period] = i;
+    }
+
+    for (let i = 0; i < sortedDashboard.length; i++) {
+      const row = sortedDashboard[i];
+      for (const head of heads) {
+        const servicesList = sheet.serviceHeads[head] || [];
+        for (const service of servicesList) {
+          const cell = row.services?.[service]?.[head];
+          const mr = cell?.mergedRange;
+          if (!mr || !mr.from || !mr.to) continue;
+
+          const fromIdx = indexMap[mr.from];
+          const toIdx = indexMap[mr.to];
+          if (fromIdx === undefined || toIdx === undefined) continue;
+
+          const start = Math.min(fromIdx, toIdx);
+          const end = Math.max(fromIdx, toIdx);
+          const count = end - start + 1;
+          if (count <= 1) continue;
+
+          const startPeriod = sortedDashboard[start].period;
+          const key = `${startPeriod}|${head}|${service}`;
+          mergeSpanMap[key] = count;
+          for (let k = start + 1; k <= end; k++) {
+            skipCells.add(`${sortedDashboard[k].period}|${head}|${service}`);
+          }
+        }
+      }
+    }
+  }
 
   const handleCreateSheet = async () => {
     if (!company?._id) return alert("Company required");
@@ -252,15 +292,15 @@ const symbols = [
     });
   };
 
-const selectSymbol = (symbol) => {
-  markDirty(
-    popup.period,
-    popup.service,
-    popup.head,
-    { symbol: symbol === "remove" ? "" : symbol } // empty string to clear
-  );
-  setPopup({ ...popup, visible: false });
-};
+  const selectSymbol = (symbol) => {
+    markDirty(
+      popup.period,
+      popup.service,
+      popup.head,
+      { symbol: symbol === "remove" ? "" : symbol } // empty string to clear
+    );
+    setPopup({ ...popup, visible: false });
+  };
 
 
   const openSubSheet = async (period, serviceName, headType) => {
@@ -457,6 +497,156 @@ const selectSymbol = (symbol) => {
               >
                 Add Service
               </button>
+
+              {/* Merge controls: head + from/to period + Merge button */}
+              <div className="flex items-center gap-2 ml-2">
+                <select
+                  value={mergeHead}
+                  onChange={(e) => setMergeHead(e.target.value)}
+                  className="border px-2 py-1"
+                >
+                  <option value="">Select Head to Merge</option>
+                  {heads.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={mergeFrom}
+                  onChange={(e) => setMergeFrom(e.target.value)}
+                  className="border px-2 py-1"
+                >
+                  <option value="">From (period)</option>
+                  {sortedDashboard.map((r) => (
+                    <option key={r.period} value={r.period}>
+                      {r.period}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Note: To-period removed. Merge count derives from selected head. */}
+
+                <button
+                  onClick={async () => {
+                    // handle merge action
+                    if (!sheet?._id) return alert("Create sheet first");
+                    if (!mergeHead) return alert("Select a head to merge");
+                    if (!mergeFrom) return alert("Select From period");
+
+                    // determine merge count from head
+                    const getMergeCount = (headName) => {
+                      if (!headName) return 1;
+                      const n = headName.toLowerCase().replace(/[^a-z]/g, "");
+                      if (n.includes("quarter")) return 3;
+                      if (n.includes("half")) return 6;
+                      if (n.includes("year")) return 12;
+                      return 1;
+                    };
+
+                    const count = getMergeCount(mergeHead);
+                    if (count <= 1) return alert("Selected head does not support multi-row merge");
+
+                    // find index of the from-period in sortedDashboard
+                    const startIdx = sortedDashboard.findIndex((r) => r.period === mergeFrom);
+                    if (startIdx === -1) return alert("Selected From period not found in sheet");
+                    const endIdx = startIdx + count - 1;
+                    if (endIdx >= sortedDashboard.length) return alert("Not enough subsequent periods to merge for the selected head");
+
+                    // collect source periods from startIdx..endIdx
+                    const sources = sortedDashboard.slice(startIdx, endIdx + 1).map((r) => r.period);
+
+                    if (sources.length < 2) return alert("Select a range of at least 2 periods to merge");
+
+                    // target will be the "From" period (we will expand it downwards)
+                    const targetPeriod = mergeFrom;
+                    const targetEndPeriod = sortedDashboard[endIdx].period;
+
+                    try {
+                      // 2. build merged updates for each service under the selected head
+                      const servicesList = sheet.serviceHeads[mergeHead] || [];
+                      const updates = [];
+
+                      // iterate services and combine symbols/notes/subSheetId
+                      for (const serviceName of servicesList) {
+                        let mergedSymbol = "";
+                        let mergedNotes = [];
+                        let mergedSubSheetId = null;
+
+                        // prefer-non-empty from newest -> oldest
+                        const sortedSources = [...sources].sort(
+                          (a, b) => parsePeriodToDate(b) - parsePeriodToDate(a)
+                        );
+
+                        for (const p of sortedSources) {
+                          const row = sheet.dashboard.find((rr) => rr.period === p);
+                          const cell = row?.services?.[serviceName]?.[mergeHead];
+                          if (!mergedSymbol && cell?.symbol) mergedSymbol = cell.symbol;
+                          if (cell?.notes) mergedNotes.push(cell.notes);
+                          if (!mergedSubSheetId && cell?.subSheetId) mergedSubSheetId = cell.subSheetId;
+                        }
+
+                        // include mergedRange metadata on the target cell so frontend can render rowspan
+                        // Always persist mergedRange even if symbol/notes/subSheetId are empty so the UI can render the span
+                        updates.push({
+                          period: targetPeriod,
+                          serviceName,
+                          headType: mergeHead,
+                          symbol: mergedSymbol || "",
+                          notes: mergedNotes.join(" | ") || "",
+                          subSheetId: mergedSubSheetId || null,
+                          mergedRange: { from: mergeFrom, to: targetEndPeriod, count: sources.length },
+                        });
+                      }
+
+                      // 3. write merged cells into the target (From) period
+                      if (updates.length > 0) {
+                        await axios.put(`${API_URL}/dashboard/cells/update`, {
+                          sheetId: sheet._id,
+                          updates,
+                        });
+                      }
+
+                      // 4. clear only the selected head's cells in source periods (do NOT delete rows)
+                      const clears = [];
+                      for (const p of sources) {
+                        if (p === targetPeriod) continue;
+                        for (const serviceName of servicesList) {
+                          clears.push({
+                            period: p,
+                            serviceName,
+                            headType: mergeHead,
+                            symbol: "",
+                            notes: "",
+                            subSheetId: null,
+                            mergedRange: null, // ensure any previous merged metadata is cleared
+                          });
+                        }
+                      }
+
+                      if (clears.length > 0) {
+                        await axios.put(`${API_URL}/dashboard/cells/update`, {
+                          sheetId: sheet._id,
+                          updates: clears,
+                        });
+                      }
+
+                      // 5. refresh
+                      await fetch();
+                      setMergeHead("");
+                      setMergeFrom("");
+                      alert("Merged rows successfully");
+                    } catch (err) {
+                      console.error("merge failed", err);
+                      alert(err.response?.data?.msg || "Merge failed");
+                    }
+                  }}
+                  className="px-3 py-1 bg-purple-600 text-white rounded"
+                >
+                  Merge
+                </button>
+              </div>
             </div>
 
             {/* Table */}
@@ -527,6 +717,9 @@ const selectSymbol = (symbol) => {
                       {heads.flatMap((head) =>
                         sheet.serviceHeads[head]?.length
                           ? sheet.serviceHeads[head].map((service) => {
+                            const skipKey = `${row.period}|${head}|${service}`;
+                            if (skipCells.has(skipKey)) return null;
+
                             const cell = row.services?.[service]?.[head] || {
                               symbol: "",
                               notes: "",
@@ -534,9 +727,15 @@ const selectSymbol = (symbol) => {
                             const symbolObj = symbols.find(
                               (s) => s.key === cell.symbol
                             );
+
+                            const spanKey = `${row.period}|${head}|${service}`;
+                            const computedSpan = mergeSpanMap[spanKey];
+                            const rowSpan = computedSpan && computedSpan > 1 ? computedSpan : undefined;
+
                             return (
                               <td
-                                key={`${head}|${service}`}
+                                key={`${head}|${service}|${row.period}`}
+                                {...(rowSpan ? { rowSpan } : {})}
                                 className="border px-2 py-1 cursor-pointer text-center relative"
                                 onClick={(e) =>
                                   editMode &&
