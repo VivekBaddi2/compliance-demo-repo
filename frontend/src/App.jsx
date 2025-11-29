@@ -9,11 +9,11 @@ import QuarterlyPage from "./pages/QuarterlyPage";
 import HalfYearlyPage from "./pages/HalfYearlyPage";
 import YearlyPage from "./pages/YearlyPage";
 import SendReportsPage from "./pages/SendReportsPage";
+import SubSheetManager from "./pages/DetailedSheetPage";
 
 // Company pages
 import CompanyDashboardSuperAdmin from "./pages/CompanyDashboardSuperAdmin";
 import CompanyDashboardAdmin from "./pages/CompanyDashboardAdmin";
-import DetailedSheetPage from "./pages/DetailedSheetPage";
 
 export default function App() {
   return (
@@ -41,7 +41,7 @@ export default function App() {
         <Route path="/company/admin-dashboard" element={<CompanyDashboardAdmin />} />
 
         {/* Detailed Sheet Page */}
-        <Route path="/company/sheet/:id" element={<DetailedSheetPage />} />
+        <Route path="/company/sheet/:id" element={<SubSheetManager />} />
 
         {/* Redirect /company/sheet without ID to dashboard */}
         <Route path="/company/sheet" element={<CompanyDashboardSuperAdmin />} />
@@ -59,6 +59,8 @@ export default function App() {
         <Route path="/company/yearly" element={<YearlyPage />} />
         {/* Send Reports Page */}
         <Route path="/company/send-reports" element={<SendReportsPage />} />
+
+        <Route path="/subsheet" element={<SubSheetManager />} />
       </Routes>
     </Router>
   );

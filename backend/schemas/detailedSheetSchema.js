@@ -1,22 +1,29 @@
-// schemas/subSheet.js
 import mongoose from "mongoose";
 
-const subCellSchema = new mongoose.Schema({
-  value: { type: String, default: "" }
-}, { _id: false });
+// Cell schema
+const cellSchema = new mongoose.Schema({
+  value: { type: String, default: "" },
+});
 
-const subRowSchema = new mongoose.Schema({
-  cells: [subCellSchema]
-}, { _id: false });
+// SubSheet schema
+const subSheetSchema = new mongoose.Schema(
+  {
+    heading: { type: String, default: "" },
 
-const subSheetSchema = new mongoose.Schema({
-  companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true },
-  sheetId: { type: mongoose.Schema.Types.ObjectId, ref: "CompanySheet", required: true },
-  headType: { type: String, enum: ["Monthly","Quarterly","HalfYearly","Yearly"], required: true },
-  serviceName: { type: String, required: true },
-  period: { type: String, required: true }, // matches dashboard.period
-  heading: { type: String, default: "" },
-  table: [subRowSchema],
-}, { timestamps: true });
+    // New: column names
+    columns: [{ type: String, default: "" }],
+
+    // Existing rows
+    rows: [
+      [
+        {
+          type: cellSchema,
+          default: () => ({}),
+        },
+      ],
+    ],
+  },
+  { timestamps: true }
+);
 
 export default mongoose.model("SubSheet", subSheetSchema);

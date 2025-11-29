@@ -1,171 +1,308 @@
-// src/pages/DetailedHeadPage.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { API_URL } from "../api";
 
-export default function DetailedHeadPage({ headType }) {
-  const navigate = useNavigate();
-  const company = JSON.parse(localStorage.getItem("activeCompany") || "{}"); // updated key
-  const companyId = company?._id;
+const API = "http://localhost:4000/api/dsheet";
 
+export default function SubSheetManager() {
   const [sheets, setSheets] = useState([]);
+  const [activeSheet, setActiveSheet] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
 
-  // Fetch sheets for the headType
-  useEffect(() => {
-    if (!companyId) return;
-
-    const fetchSheets = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/dsheet/list/${companyId}/${headType}`);
-        setSheets(res.data.data);
-      } catch (err) {
-        console.error("Error fetching sheets:", err);
-        setSheets([]);
-      }
-    };
-
-    fetchSheets();
-  }, [companyId, headType]);
-
-  // Toggle edit mode
-  const toggleEdit = () => setEditMode(!editMode);
-
-  // Create new sheet
-  const addSheet = async () => {
-    const serviceName = prompt("Enter Service Name for new sheet:");
-    if (!serviceName) return;
-
+  // Fetch All Sheets
+  const fetchSheets = async () => {
     try {
-      const period = ""; // optional: can be dynamic
-      const heading = serviceName;
-      const res = await axios.post(`${API_URL}/dsheet/create`, { companyId, headType, serviceName, period, heading });
-      setSheets(prev => [res.data.data, ...prev]);
+      const res = await axios.get(`${API}/getAll`);
+      setSheets(res.data.data || []);
     } catch (err) {
-      console.error("Error creating sheet:", err);
-      alert("Failed to create sheet");
+      console.error("Error fetching sheets", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Update cell
-  const updateCell = (sheetIdx, r, c, value) => {
-    const copy = [...sheets];
-    if (!copy[sheetIdx].table[r]) copy[sheetIdx].table[r] = { cells: [] };
-    copy[sheetIdx].table[r].cells[c] = { value };
-    setSheets(copy);
+  // Create Sheet
+  const createSheet = async () => {
+    try {
+      const res = await axios.post(`${API}/create`, { heading: "New Sheet" });
+      await fetchSheets();
+      openSheet(res.data.data._id);
+      setEditMode(true); // auto-edit new sheet
+    } catch (err) {
+      console.error("Error creating sheet", err);
+    }
   };
 
-  // Add row
-  const addRow = (sheetIdx) => {
-    const copy = [...sheets];
-    const cols = copy[sheetIdx].table?.[0]?.cells?.length || 4;
-    copy[sheetIdx].table.push({ cells: Array.from({ length: cols }).map(() => ({ value: "" })) });
-    setSheets(copy);
+  // Open sheet
+  const openSheet = async (id) => {
+    try {
+      const res = await axios.get(`${API}/get/${id}`);
+      setActiveSheet(res.data.data);
+      setEditMode(false); // default view mode
+    } catch (err) {
+      console.error("Error opening sheet", err);
+    }
   };
 
-  // Add column
-  const addColumn = (sheetIdx) => {
-    const copy = [...sheets];
-    copy[sheetIdx].table.forEach(row => row.cells.push({ value: "" }));
-    setSheets(copy);
+  // Toggle Edit Mode
+  const toggleEditMode = () => setEditMode((prev) => !prev);
+
+  // Update heading
+  const updateHeading = (value) => {
+    setActiveSheet({ ...activeSheet, heading: value });
   };
 
-  // Delete row
-  const deleteRow = (sheetIdx, r) => {
-    const copy = [...sheets];
-    copy[sheetIdx].table = copy[sheetIdx].table.filter((_, i) => i !== r);
-    setSheets(copy);
+  // Update column name
+  const updateColumnName = (index, value) => {
+    const updated = { ...activeSheet };
+    updated.columns[index] = value;
+    setActiveSheet(updated);
   };
 
-  // Delete column
-  const deleteColumn = (sheetIdx, c) => {
-    const copy = [...sheets];
-    copy[sheetIdx].table.forEach(row => row.cells = row.cells.filter((_, i) => i !== c));
-    setSheets(copy);
+  // Update cell value
+  const updateCell = (r, c, value) => {
+    const updated = { ...activeSheet };
+    updated.rows[r][c].value = value;
+    setActiveSheet(updated);
   };
 
   // Save sheet
-  const saveSheet = async (sheetIdx) => {
-    try {
-      await axios.put(`${API_URL}/dsheet/update/${sheets[sheetIdx]._id}`, sheets[sheetIdx]);
-      alert("Saved!");
-    } catch (err) {
-      console.error("Error saving sheet:", err);
-      alert("Save failed!");
-    }
+  const saveSheet = async () => {
+    await axios.put(`${API}/update/${activeSheet._id}`, {
+      heading: activeSheet.heading,
+      rows: activeSheet.rows,
+      columns: activeSheet.columns,
+    });
+    fetchSheets();
+    alert("Saved!");
   };
 
-  if (!companyId) return <div>Please login to view sheets</div>;
+  // Add/Delete Row
+  const addRow = async () => {
+    await axios.put(`${API}/rows/add/${activeSheet._id}`);
+    openSheet(activeSheet._id);
+  };
+  const deleteRow = async (index) => {
+    await axios.put(`${API}/rows/delete/${activeSheet._id}/${index}`);
+    openSheet(activeSheet._id);
+  };
+
+  // Add/Delete Column
+  const addColumn = async () => {
+    await axios.put(`${API}/columns/add/${activeSheet._id}`);
+    openSheet(activeSheet._id);
+  };
+  const deleteColumn = async (index) => {
+    await axios.put(`${API}/columns/delete/${activeSheet._id}/${index}`);
+    openSheet(activeSheet._id);
+  };
+
+  // Delete Sheet
+  const deleteSheet = async () => {
+    if (!window.confirm("Delete this sheet?")) return;
+    await axios.delete(`${API}/delete/${activeSheet._id}`);
+    setActiveSheet(null);
+    fetchSheets();
+  };
+
+  useEffect(() => {
+    fetchSheets();
+  }, []);
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between mb-4 items-center">
-        <h1 className="text-2xl font-bold">{headType} Details</h1>
-        <div className="flex gap-2">
-          <button onClick={() => navigate(-1)} className="px-3 py-1 bg-gray-700 text-white rounded">
-            Back
-          </button>
-          <button onClick={toggleEdit} className="px-3 py-1 bg-blue-600 text-white rounded">
-            {editMode ? "View" : "Edit"}
-          </button>
-          <button onClick={addSheet} className="px-3 py-1 bg-green-600 text-white rounded">
-            + Add Sheet
-          </button>
-        </div>
-      </div>
+    <div style={styles.wrapper}>
+      <h1 style={styles.title}>📄 SubSheet Manager</h1>
 
-      {/* No sheets message */}
-      {sheets.length === 0 && (
-        <div className="text-gray-500 mt-4">No sheets created yet. Click "Add Sheet" to create one.</div>
-      )}
-
-      {/* Sheets */}
-      {sheets.map((sheet, sheetIdx) => (
-        <div key={sheet._id} className="mb-6 border rounded p-3 bg-white">
-          <h2 className="text-xl font-semibold mb-2">{sheet.heading || sheet.serviceName}</h2>
-
-          <table className="min-w-[600px] border">
-            <tbody>
-              {(sheet.table?.length
-                ? sheet.table
-                : [{ cells: Array.from({ length: 4 }).map(() => ({ value: "" })) }])
-                .map((row, rIdx) => (
-                  <tr key={rIdx}>
-                    {row.cells.map((cell, cIdx) => (
-                      <td key={cIdx} className="border p-1">
-                        {editMode ? (
-                          <input
-                            value={cell.value}
-                            onChange={(e) => updateCell(sheetIdx, rIdx, cIdx, e.target.value)}
-                            className="border px-2 py-1 min-w-[100px]"
-                          />
-                        ) : (
-                          <span>{cell.value}</span>
-                        )}
-                      </td>
-                    ))}
-                    {editMode && (
-                      <td className="p-1">
-                        <button onClick={() => deleteRow(sheetIdx, rIdx)} className="text-red-600">✕</button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-
-            </tbody>
-          </table>
+      <div style={styles.container}>
+        {/* LEFT PANEL */}
+        <div style={styles.leftPanel}>
+          <h2 style={styles.panelTitle}>All Sheets</h2>
 
           {editMode && (
-            <div className="mt-2 flex gap-2">
-              <button onClick={() => addRow(sheetIdx)} className="px-3 py-1 bg-green-600 text-white rounded">+ Row</button>
-              <button onClick={() => addColumn(sheetIdx)} className="px-3 py-1 bg-yellow-600 text-white rounded">+ Col</button>
-              <button onClick={() => saveSheet(sheetIdx)} className="px-3 py-1 bg-blue-600 text-white rounded">Save</button>
-            </div>
+            <button style={styles.createBtn} onClick={createSheet}>
+              + Create SubSheet
+            </button>
+          )}
+
+          {loading ? (
+            <p>Loading...</p>
+          ) : sheets.length === 0 ? (
+            <p>No sheets found.</p>
+          ) : (
+            <table style={styles.sheetTable}>
+              <thead>
+                <tr>
+                  <th>Heading</th>
+                  <th>Open</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sheets.map((sheet) => (
+                  <tr key={sheet._id}>
+                    <td>{sheet.heading}</td>
+                    <td>
+                      <button
+                        style={styles.openBtn}
+                        onClick={() => openSheet(sheet._id)}
+                      >
+                        Open
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
-      ))}
+
+        {/* RIGHT PANEL */}
+        <div style={styles.rightPanel}>
+          {!activeSheet ? (
+            <h2>Select a sheet to start editing</h2>
+          ) : (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h2>{activeSheet.heading}</h2>
+                <button style={styles.editBtn} onClick={toggleEditMode}>
+                  {editMode ? "Exit Edit Mode" : "Edit Sheet"}
+                </button>
+              </div>
+
+              {editMode && (
+                <input
+                  style={styles.headingInput}
+                  value={activeSheet.heading}
+                  onChange={(e) => updateHeading(e.target.value)}
+                />
+              )}
+
+              <div style={{ overflowX: "auto", marginTop: 20 }}>
+                <table style={styles.editorTable}>
+                  <thead>
+                    <tr>
+                      {activeSheet.columns.map((colName, colIndex) => (
+                        <th key={colIndex} style={styles.th}>
+                          {editMode ? (
+                            <>
+                              <input
+                                style={styles.columnInput}
+                                value={colName}
+                                onChange={(e) =>
+                                  updateColumnName(colIndex, e.target.value)
+                                }
+                              />
+                              <button
+                                style={styles.deleteIcon}
+                                onClick={() => deleteColumn(colIndex)}
+                              >
+                                ✖
+                              </button>
+                            </>
+                          ) : (
+                            colName
+                          )}
+                        </th>
+                      ))}
+                      {editMode && <th>Actions</th>}
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {activeSheet.rows.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {row.map((cell, colIndex) => (
+                          <td key={colIndex} style={styles.td}>
+                            {editMode ? (
+                              <input
+                                style={styles.cellInput}
+                                value={cell.value}
+                                onChange={(e) =>
+                                  updateCell(rowIndex, colIndex, e.target.value)
+                                }
+                              />
+                            ) : (
+                              cell.value
+                            )}
+                          </td>
+                        ))}
+                        {editMode && (
+                          <td>
+                            <button
+                              style={styles.deleteRowBtn}
+                              onClick={() => deleteRow(rowIndex)}
+                            >
+                              Delete Row
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {editMode && (
+                <div style={{ marginTop: 20 }}>
+                  <button style={styles.addBtn} onClick={addRow}>
+                    + Add Row
+                  </button>
+                  <button style={styles.addBtn} onClick={addColumn}>
+                    + Add Column
+                  </button>
+                  <button style={styles.saveBtn} onClick={saveSheet}>
+                    Save Changes
+                  </button>
+                  <button style={styles.deleteSheetBtn} onClick={deleteSheet}>
+                    Delete Sheet
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
+
+/* ------------------ STYLES ------------------ */
+const styles = {
+  wrapper: { padding: "20px", fontFamily: "Arial" },
+  title: { marginBottom: "20px", textAlign: "center" },
+  container: { display: "flex", gap: "25px" },
+
+  leftPanel: { width: "30%", padding: "20px", borderRight: "2px solid #e0e0e0" },
+  panelTitle: { marginBottom: 10 },
+  createBtn: {
+    padding: "8px 14px",
+    backgroundColor: "#4caf50",
+    color: "white",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer",
+    marginBottom: 15,
+  },
+  sheetTable: { width: "100%", borderCollapse: "collapse" },
+  openBtn: {
+    padding: "6px 12px",
+    backgroundColor: "#1976d2",
+    color: "white",
+    border: "none",
+    borderRadius: 4,
+    cursor: "pointer",
+  },
+
+  rightPanel: { width: "70%", padding: "20px" },
+  headingInput: { fontSize: 18, padding: 10, width: "300px", marginTop: 10 },
+  columnInput: { width: "80%", padding: 4, fontSize: 14 },
+  editorTable: { borderCollapse: "collapse", width: "100%" },
+  th: { border: "1px solid #ccc", padding: 10, backgroundColor: "#f5f5f5", position: "relative" },
+  td: { border: "1px solid #ddd", padding: 8 },
+  deleteIcon: { marginLeft: 5, color: "red", cursor: "pointer", border: "none", background: "none" },
+  cellInput: { width: "100%", padding: 5 },
+  addBtn: { padding: "8px 14px", backgroundColor: "#009688", color: "white", border: "none", borderRadius: 6, cursor: "pointer", marginRight: 10 },
+  saveBtn: { padding: "10px 16px", backgroundColor: "green", color: "white", border: "none", borderRadius: 6, cursor: "pointer" },
+  deleteRowBtn: { backgroundColor: "red", color: "white", padding: "6px 12px", border: "none", borderRadius: 4, cursor: "pointer" },
+  deleteSheetBtn: { padding: "10px 16px", backgroundColor: "darkred", color: "white", marginLeft: 15, border: "none", borderRadius: 6, cursor: "pointer" },
+  editBtn: { padding: "6px 12px", backgroundColor: "#ff9800", color: "white", border: "none", borderRadius: 6, cursor: "pointer" },
+};
