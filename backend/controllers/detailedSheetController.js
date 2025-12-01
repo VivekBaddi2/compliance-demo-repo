@@ -8,7 +8,7 @@ export const createSubSheet = asyncHandler(async (req, res) => {
 
   // Create empty grid
   const emptyGrid = Array.from({ length: rowCount }, () =>
-    Array.from({ length: colCount }, () => ({ value: "" }))
+    Array.from({ length: colCount }, () => ({ value: "nine" }))
   );
 
   // Create default column names: Col 1, Col 2, ...
