@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import ClientSheets from "../components/ClientSheets";
+import AssignTaskModal from "../components/AssignTaskModal";
 
 export default function SuperAdminDashboard() {
   const [activeTab, setActiveTab] = useState("admins");
@@ -20,6 +21,10 @@ export default function SuperAdminDashboard() {
 
   const [showAddCompany, setShowAddCompany] = useState(false);
 
+  // Assign Task modal state (separate from company modal)
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [taskModalAdmin, setTaskModalAdmin] = useState(null);
+
   const formatKey = (key) => {
     const words = key
       .replace(/([A-Z])/g, " $1") // camelCase → separate words
@@ -36,6 +41,22 @@ export default function SuperAdminDashboard() {
   const closeModal = () => {
     setShowModal(false);
     setViewCompany(null);
+  };
+
+  // Open assign task modal for a specific admin
+  const openAssignModal = (admin) => {
+    setTaskModalAdmin(admin);
+    setTaskModalOpen(true);
+  };
+
+  // Close assign task modal. If didCreate === true, refresh admins list.
+  const closeAssignModal = (didCreate = false) => {
+    setTaskModalOpen(false);
+    setTaskModalAdmin(null);
+    if (didCreate) {
+      // refresh admins to show any new task-related UI (if needed)
+      fetchAdmins();
+    }
   };
 
   // Company state
@@ -479,6 +500,12 @@ export default function SuperAdminDashboard() {
                     </td>
                     <td className="border px-4 py-2 space-x-2">
                       <button
+                        onClick={() => openAssignModal(admin)}
+                        className="px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                      >
+                        Assign Task
+                      </button>
+                      <button
                         onClick={() => handleEditAdmin(admin)}
                         className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
                       >
@@ -832,6 +859,15 @@ export default function SuperAdminDashboard() {
         <div className="bg-white p-6 rounded-xl shadow">
           <ClientSheets />
         </div>
+      )}
+
+      {/* Assign Task Modal */}
+      {taskModalOpen && (
+        <AssignTaskModal
+          open={taskModalOpen}
+          onClose={(didCreate) => closeAssignModal(didCreate)}
+          admin={taskModalAdmin}
+        />
       )}
 
       {/* Company Details Modal */}

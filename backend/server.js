@@ -6,7 +6,7 @@ import appRoutes from "./routes/index.js";
 import fs from "fs";
 import dotenv from "dotenv";
 import https from "https";
-
+import { startTaskScheduler } from "./controllers/taskScheduler.js";
 
 dotenv.config();
 
@@ -39,6 +39,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api", appRoutes);
 
+startTaskScheduler();
 
 if (process.env.DEPLOY_ENV === "local") {
   app.listen(4000, (req, res) => {
