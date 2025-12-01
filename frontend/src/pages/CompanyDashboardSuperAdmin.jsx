@@ -306,45 +306,47 @@ export default function CompanyDashboardSuperAdmin() {
   const openSubSheet = async (period, serviceName, headType) => {
     const row = sortedDashboard.find((r) => r.period === period);
     const cell = row.services?.[serviceName]?.[headType];
-    if (cell?.subSheetId) {
-      navigate(`/company/sheet/${cell.subSheetId}`);
-      return;
-    }
+    // if (cell?.subSheetId) {
+    //   navigate(`/company/subsheet/view/${headType}/${cell.subSheetId}`);
+    //   return;
+    // }
 
-    try {
-      const payload = {
-        companyId: sheet.companyId,
-        sheetId: sheet._id,
-        headType,
-        serviceName,
-        period,
-        heading: `${serviceName} — ${period} — ${headType}`,
-        table: [],
-      };
-      const res = await axios.post(`${API_URL}/dsheet/create`, payload);
-      const created = res.data.data;
+    // try {
+    //   const payload = {
+    //     companyId: sheet.companyId,
+    //     sheetId: sheet._id,
+    //     headType,
+    //     serviceName,
+    //     period,
+    //     heading: `${serviceName} — ${period} — ${headType}`,
+    //     table: [],
+    //   };
+    //   const res = await axios.post(`${API_URL}/dsheet/create`, payload);
+    //   const created = res.data.data;
 
-      // Use PUT for the cells update endpoint (router expects PUT)
-      await axios.put(`${API_URL}/dashboard/cells/update`, {
-        sheetId: sheet._id,
-        updates: [
-          {
-            period,
-            serviceName,
-            headType,
-            symbol: cell?.symbol || "",
-            notes: cell?.notes || "",
-            subSheetId: created._id,
-          },
-        ],
-      });
+    //   // Use PUT for the cells update endpoint (router expects PUT)
+    //   await axios.put(`${API_URL}/dashboard/cells/update`, {
+    //     sheetId: sheet._id,
+    //     updates: [
+    //       {
+    //         period,
+    //         serviceName,
+    //         headType,
+    //         symbol: cell?.symbol || "",
+    //         notes: cell?.notes || "",
+    //         subSheetId: created._id,
+    //       },
+    //     ],
+    //   });
 
-      await fetch();
-      navigate(`/company/sheet/${created._id}`);
-    } catch (err) {
-      console.error(err);
-      alert("Could not open subsheet");
-    }
+    //   await fetch();
+    //   navigate(`/company/subsheet/view/${headType}/${created._id}`);
+    // } catch (err) {
+    //   console.error(err);
+    //   alert("Could not open subsheet");
+    // }
+
+    navigate(`/company/subsheet/${headType.toLowerCase()}/${company._id}`)
   };
 
   const handleSave = async () => {
@@ -369,6 +371,9 @@ export default function CompanyDashboardSuperAdmin() {
   };
 
   if (loading) return <div>Loading...</div>;
+
+
+  console.log(sheet)
 
   return (
     <>
@@ -506,11 +511,13 @@ export default function CompanyDashboardSuperAdmin() {
                   className="border px-2 py-1"
                 >
                   <option value="">Select Head to Merge</option>
-                  {heads.map((h) => (
-                    <option key={h} value={h}>
-                      {h}
-                    </option>
-                  ))}
+                  {heads
+                    .filter((h) => h !== "Monthly")
+                    .map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
                 </select>
 
                 <select
@@ -523,7 +530,8 @@ export default function CompanyDashboardSuperAdmin() {
                     <option key={r.period} value={r.period}>
                       {r.period}
                     </option>
-                  ))}
+                  )
+                  )}
                 </select>
 
                 {/* Note: To-period removed. Merge count derives from selected head. */}

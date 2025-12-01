@@ -9,6 +9,10 @@ const cellSchema = new mongoose.Schema({
 const subSheetSchema = new mongoose.Schema(
   {
     heading: { type: String, default: "" },
+    // sheet type: monthly, quarterly, half-yearly, yearly
+    type: { type: String, default: "monthly" },
+    // company id for filtering sheets by company
+    companyId: { type: String, default: "" },
 
     // New: column names
     columns: [{ type: String, default: "" }],

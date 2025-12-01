@@ -195,7 +195,7 @@ export default function CompanyDashboardAdmin() {
     const row = sortedDashboard.find((r) => r.period === period);
     const cell = row.services?.[serviceName]?.[headType];
     if (cell?.subSheetId) {
-      navigate(`/company/sheet/${cell.subSheetId}`);
+      navigate(`/company/subsheet/view/${cell.subSheetId}`);
       return;
     }
 
@@ -227,7 +227,7 @@ export default function CompanyDashboardAdmin() {
       });
 
       await fetch();
-      navigate(`/company/sheet/${created._id}`);
+      navigate(`/company/subsheet/view/${created._id}`);
     } catch (err) {
       console.error(err);
       alert("Could not open subsheet");

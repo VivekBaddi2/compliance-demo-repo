@@ -2,12 +2,14 @@ import { NavLink, useNavigate } from "react-router-dom";
 
 export default function CompanyNavbar() {
   const navigate = useNavigate();
+  const company = JSON.parse(localStorage.getItem("activeCompany") || "null");
+  const companyId = company?._id || "";
 
   const tabs = [
-    { label: "Monthly", path: "/company/monthly" },
-    { label: "Quarterly", path: "/company/quarterly" },
-    { label: "Half Yearly", path: "/company/half-yearly" },
-    { label: "Yearly", path: "/company/yearly" },
+    { label: "Monthly", path: companyId ? `/company/subsheet/monthly/${companyId}` : "/company/subsheet/monthly" },
+    { label: "Quarterly", path: companyId ? `/company/subsheet/quarterly/${companyId}` : "/company/subsheet/quarterly" },
+    { label: "Half Yearly", path: companyId ? `/company/subsheet/half-yearly/${companyId}` : "/company/subsheet/half-yearly" },
+    { label: "Yearly", path: companyId ? `/company/subsheet/yearly/${companyId}` : "/company/subsheet/yearly" },
     { label: "Send Reports", path: "/company/send-reports" }
   ];
 

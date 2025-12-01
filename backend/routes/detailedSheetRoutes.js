@@ -2,6 +2,7 @@ import express from "express";
 import {
   createSubSheet,
   getAllSubSheets,
+  getSubSheetsByType,
   getSubSheet,
   updateSubSheet,
   deleteSubSheet,
@@ -16,6 +17,8 @@ const router = express.Router();
 // Basic CRUD
 router.post("/create", createSubSheet);
 router.get("/getAll", getAllSubSheets);
+router.get("/byType/:type/:companyId", getSubSheetsByType); // filter by type and companyId
+router.get("/byType/:type", getSubSheetsByType); // filter by type only
 router.get("/get/:id", getSubSheet);
 router.put("/update/:id", updateSubSheet);
 router.delete("/delete/:id", deleteSubSheet);

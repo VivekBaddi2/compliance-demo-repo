@@ -4,10 +4,7 @@ import SuperAdminLogin from "./pages/SuperAdminLogin";
 import AdminLogin from "./pages/AdminLogin";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import MonthlyPage from "./pages/MonthlyPage";
-import QuarterlyPage from "./pages/QuarterlyPage";
-import HalfYearlyPage from "./pages/HalfYearlyPage";
-import YearlyPage from "./pages/YearlyPage";
+import SubSheetPage from "./pages/SubSheetPage";
 import SendReportsPage from "./pages/SendReportsPage";
 import SubSheetManager from "./pages/DetailedSheetPage";
 
@@ -46,17 +43,11 @@ export default function App() {
         {/* Redirect /company/sheet without ID to dashboard */}
         <Route path="/company/sheet" element={<CompanyDashboardSuperAdmin />} />
 
-        {/* Monthly Page */}
-        <Route path="/company/monthly" element={<MonthlyPage />} />
+        {/* SubSheet common page (type-driven) */}
+        <Route path="/company/subsheet/:type/:companyId" element={<SubSheetPage />} />
+        <Route path="/company/subsheet/:type" element={<SubSheetPage />} />
+        <Route path="/company/subsheet/view/:type/:id" element={<SubSheetPage />} />
 
-        {/* Quarterly Page */}
-        <Route path="/company/quarterly" element={<QuarterlyPage />} />
-
-        {/* Half Yearly Page */}
-        <Route path="/company/half-yearly" element={<HalfYearlyPage />} />
-
-        {/* Yearly Page */}
-        <Route path="/company/yearly" element={<YearlyPage />} />
         {/* Send Reports Page */}
         <Route path="/company/send-reports" element={<SendReportsPage />} />
 

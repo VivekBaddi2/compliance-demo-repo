@@ -4,7 +4,7 @@ import SubSheet from "../schemas/detailedSheetSchema.js";
 // @desc Create subsheet (default 4x4 empty)
 // @route POST /api/subsheets
 export const createSubSheet = asyncHandler(async (req, res) => {
-  const { heading, colCount = 4, rowCount = 4 } = req.body; // allow optional custom size
+  const { heading, colCount = 4, rowCount = 4, type = 'monthly', companyId = '' } = req.body; // allow optional custom size, type, and companyId
 
   // Create empty grid
   const emptyGrid = Array.from({ length: rowCount }, () =>
@@ -16,6 +16,8 @@ export const createSubSheet = asyncHandler(async (req, res) => {
 
   const newSheet = await SubSheet.create({
     heading: heading || "",
+    type: type || 'monthly',
+    companyId: companyId || '',
     rows: emptyGrid,
     columns,
   });
@@ -27,6 +29,21 @@ export const createSubSheet = asyncHandler(async (req, res) => {
 // @route GET /api/subsheets
 export const getAllSubSheets = asyncHandler(async (req, res) => {
   const sheets = await SubSheet.find().sort({ createdAt: -1 });
+  res.json({ success: true, data: sheets });
+});
+
+// @desc Get subsheets by type (and optionally by companyId)
+// @route GET /api/subsheets/byType/:type or /api/subsheets/byType/:type/:companyId
+export const getSubSheetsByType = asyncHandler(async (req, res) => {
+  const type = req.params.type || 'monthly';
+  const companyId = req.params.companyId || req.query.companyId; // support both params and query
+
+  const filter = { type };
+  if (companyId) {
+    filter.companyId = companyId;
+  }
+
+  const sheets = await SubSheet.find(filter).sort({ createdAt: -1 });
   res.json({ success: true, data: sheets });
 });
 
