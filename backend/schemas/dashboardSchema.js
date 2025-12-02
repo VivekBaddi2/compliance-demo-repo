@@ -3,9 +3,12 @@ import mongoose from "mongoose";
 
 // Each cell under a head for a service
 const headCellSchema = new mongoose.Schema({
-  symbol: { type: String, enum: ["tick", "cross", "late", ""], default: "" },
+  symbol: { type: String, default: "" },
   notes: { type: String, default: "" },
-  subSheetId: { type: mongoose.Schema.Types.ObjectId, ref: "SubSheet", default: null } // link to detailed sub-sheet
+  subSheetId: { type: mongoose.Schema.Types.ObjectId, ref: "SubSheet", default: null }, // link to detailed sub-sheet
+
+    // NEW: timestamp for last change to this cell
+  updatedAt: { type: Date, default: null }
 }, { _id: false });
 
 // Each service's cells for all heads are dynamic now

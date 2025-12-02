@@ -384,6 +384,9 @@ export const updateCells = asyncHandler(async (req, res) => {
 
     servicesPlain[serviceName][headType].symbol = symbol;
     servicesPlain[serviceName][headType].notes = notes;
+
+    servicesPlain[serviceName][headType].updatedAt = new Date();
+
     // preserve arbitrary metadata fields if provided in the update payload
     if (u.mergedRange !== undefined) {
       if (u.mergedRange === null) {

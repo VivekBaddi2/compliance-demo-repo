@@ -5,6 +5,22 @@ import { FaTimes, FaEdit, FaSave } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import CompanyNavbar from "../components/Navbar";
 
+// ======================
+// Timestamp Formatting
+// ======================
+const pad = (n) => String(n).padStart(2, "0");
+
+const formatTimestamp = (ts) => {
+  if (!ts) return "";
+  const d = new Date(ts);
+
+  const date = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
+  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+  return `${date} , ${time}`;
+};
+
+
 export default function CompanyDashboardSuperAdmin() {
   const company = JSON.parse(localStorage.getItem("activeCompany") || "null"); // updated key
   const navigate = useNavigate();
@@ -93,8 +109,8 @@ export default function CompanyDashboardSuperAdmin() {
   };
   const sortedDashboard = sheet?.dashboard
     ? [...sheet.dashboard].sort(
-      (a, b) => parsePeriodToDate(b.period) - parsePeriodToDate(a.period)
-    )
+        (a, b) => parsePeriodToDate(b.period) - parsePeriodToDate(a.period)
+      )
     : [];
 
   // compute merged spans and cells to skip based on persisted mergedRange metadata
@@ -302,7 +318,6 @@ export default function CompanyDashboardSuperAdmin() {
     setPopup({ ...popup, visible: false });
   };
 
-
   const openSubSheet = async (period, serviceName, headType) => {
     const row = sortedDashboard.find((r) => r.period === period);
     const cell = row.services?.[serviceName]?.[headType];
@@ -346,7 +361,7 @@ export default function CompanyDashboardSuperAdmin() {
     //   alert("Could not open subsheet");
     // }
 
-    navigate(`/company/subsheet/${headType.toLowerCase()}/${company._id}`)
+    navigate(`/company/subsheet/${headType.toLowerCase()}/${company._id}`);
   };
 
   const handleSave = async () => {
@@ -372,8 +387,7 @@ export default function CompanyDashboardSuperAdmin() {
 
   if (loading) return <div>Loading...</div>;
 
-
-  console.log(sheet)
+  console.log(sheet);
 
   return (
     <>
@@ -530,8 +544,7 @@ export default function CompanyDashboardSuperAdmin() {
                     <option key={r.period} value={r.period}>
                       {r.period}
                     </option>
-                  )
-                  )}
+                  ))}
                 </select>
 
                 {/* Note: To-period removed. Merge count derives from selected head. */}
@@ -554,18 +567,32 @@ export default function CompanyDashboardSuperAdmin() {
                     };
 
                     const count = getMergeCount(mergeHead);
-                    if (count <= 1) return alert("Selected head does not support multi-row merge");
+                    if (count <= 1)
+                      return alert(
+                        "Selected head does not support multi-row merge"
+                      );
 
                     // find index of the from-period in sortedDashboard
-                    const startIdx = sortedDashboard.findIndex((r) => r.period === mergeFrom);
-                    if (startIdx === -1) return alert("Selected From period not found in sheet");
+                    const startIdx = sortedDashboard.findIndex(
+                      (r) => r.period === mergeFrom
+                    );
+                    if (startIdx === -1)
+                      return alert("Selected From period not found in sheet");
                     const endIdx = startIdx + count - 1;
-                    if (endIdx >= sortedDashboard.length) return alert("Not enough subsequent periods to merge for the selected head");
+                    if (endIdx >= sortedDashboard.length)
+                      return alert(
+                        "Not enough subsequent periods to merge for the selected head"
+                      );
 
                     // collect source periods from startIdx..endIdx
-                    const sources = sortedDashboard.slice(startIdx, endIdx + 1).map((r) => r.period);
+                    const sources = sortedDashboard
+                      .slice(startIdx, endIdx + 1)
+                      .map((r) => r.period);
 
-                    if (sources.length < 2) return alert("Select a range of at least 2 periods to merge");
+                    if (sources.length < 2)
+                      return alert(
+                        "Select a range of at least 2 periods to merge"
+                      );
 
                     // PRE-CHECK: ensure no overlapping/already-merged cells exist inside the intended range
                     const servicesList = sheet.serviceHeads[mergeHead] || [];
@@ -603,11 +630,16 @@ export default function CompanyDashboardSuperAdmin() {
                         );
 
                         for (const p of sortedSources) {
-                          const row = sheet.dashboard.find((rr) => rr.period === p);
-                          const cell = row?.services?.[serviceName]?.[mergeHead];
-                          if (!mergedSymbol && cell?.symbol) mergedSymbol = cell.symbol;
+                          const row = sheet.dashboard.find(
+                            (rr) => rr.period === p
+                          );
+                          const cell =
+                            row?.services?.[serviceName]?.[mergeHead];
+                          if (!mergedSymbol && cell?.symbol)
+                            mergedSymbol = cell.symbol;
                           if (cell?.notes) mergedNotes.push(cell.notes);
-                          if (!mergedSubSheetId && cell?.subSheetId) mergedSubSheetId = cell.subSheetId;
+                          if (!mergedSubSheetId && cell?.subSheetId)
+                            mergedSubSheetId = cell.subSheetId;
                         }
 
                         // include mergedRange metadata on the target cell so frontend can render rowspan
@@ -619,7 +651,11 @@ export default function CompanyDashboardSuperAdmin() {
                           symbol: mergedSymbol || "",
                           notes: mergedNotes.join(" | ") || "",
                           subSheetId: mergedSubSheetId || null,
-                          mergedRange: { from: mergeFrom, to: targetEndPeriod, count: sources.length },
+                          mergedRange: {
+                            from: mergeFrom,
+                            to: targetEndPeriod,
+                            count: sources.length,
+                          },
                         });
                       }
 
@@ -740,49 +776,60 @@ export default function CompanyDashboardSuperAdmin() {
                       {heads.flatMap((head) =>
                         sheet.serviceHeads[head]?.length
                           ? sheet.serviceHeads[head].map((service) => {
-                            const skipKey = `${row.period}|${head}|${service}`;
-                            if (skipCells.has(skipKey)) return null;
+                              const skipKey = `${row.period}|${head}|${service}`;
+                              if (skipCells.has(skipKey)) return null;
 
-                            const cell = row.services?.[service]?.[head] || {
-                              symbol: "",
-                              notes: "",
-                            };
-                            const symbolObj = symbols.find(
-                              (s) => s.key === cell.symbol
-                            );
+                              const cell = row.services?.[service]?.[head] || {
+                                symbol: "",
+                                notes: "",
+                              };
+                              const symbolObj = symbols.find(
+                                (s) => s.key === cell.symbol
+                              );
 
-                            const spanKey = `${row.period}|${head}|${service}`;
-                            const computedSpan = mergeSpanMap[spanKey];
-                            const rowSpan = computedSpan && computedSpan > 1 ? computedSpan : undefined;
+                              const spanKey = `${row.period}|${head}|${service}`;
+                              const computedSpan = mergeSpanMap[spanKey];
+                              const rowSpan =
+                                computedSpan && computedSpan > 1
+                                  ? computedSpan
+                                  : undefined;
 
-                            return (
-                              <td
-                                key={`${head}|${service}|${row.period}`}
-                                {...(rowSpan ? { rowSpan } : {})}
-                                className="border px-2 py-1 cursor-pointer text-center relative"
-                                onClick={(e) =>
-                                  editMode &&
-                                  openPopup(e, row.period, service, head)
-                                }
-                                onDoubleClick={() =>
-                                  !editMode &&
-                                  openSubSheet(row.period, service, head)
-                                }
-                              >
-                                <div className="text-xl">
-                                  {symbolObj?.label || ""}
-                                </div>
-                              </td>
-                            );
-                          })
+                              return (
+                                <td
+                                  key={`${head}|${service}|${row.period}`}
+                                  {...(rowSpan ? { rowSpan } : {})}
+                                  className="border px-2 py-1 cursor-pointer text-center relative"
+                                  onClick={(e) =>
+                                    editMode &&
+                                    openPopup(e, row.period, service, head)
+                                  }
+                                  onDoubleClick={() =>
+                                    !editMode &&
+                                    openSubSheet(row.period, service, head)
+                                  }
+                                >
+                                  <div
+                                    className="text-xl"
+                                 title={
+  cell?.updatedAt
+    ? `Updated: ${formatTimestamp(cell.updatedAt)}`
+    : "Not updated"
+}
+
+                                  >
+                                    {symbolObj?.label || ""}
+                                  </div>
+                                </td>
+                              );
+                            })
                           : [
-                            <td
-                              key={head}
-                              className="border px-2 py-1 text-center"
-                            >
-                              -
-                            </td>,
-                          ]
+                              <td
+                                key={head}
+                                className="border px-2 py-1 text-center"
+                              >
+                                -
+                              </td>,
+                            ]
                       )}
                     </tr>
                   ))}
@@ -822,4 +869,3 @@ export default function CompanyDashboardSuperAdmin() {
     </>
   );
 }
-

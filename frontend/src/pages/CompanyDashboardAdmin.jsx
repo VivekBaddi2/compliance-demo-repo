@@ -5,6 +5,22 @@ import { FaTimes, FaEdit, FaSave } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import CompanyNavbar from "../components/Navbar";
 
+// ======================
+// Timestamp Formatting
+// ======================
+const pad = (n) => String(n).padStart(2, "0");
+
+const formatTimestamp = (ts) => {
+  if (!ts) return "";
+  const d = new Date(ts);
+
+  const date = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
+  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+  return `${date} , ${time}`;
+};
+
+
 export default function CompanyDashboardAdmin() {
   const company = JSON.parse(localStorage.getItem("activeCompany") || "null"); // updated key
   const navigate = useNavigate();
@@ -87,8 +103,8 @@ export default function CompanyDashboardAdmin() {
   };
   const sortedDashboard = sheet?.dashboard
     ? [...sheet.dashboard].sort(
-      (a, b) => parsePeriodToDate(b.period) - parsePeriodToDate(a.period)
-    )
+        (a, b) => parsePeriodToDate(b.period) - parsePeriodToDate(a.period)
+      )
     : [];
 
   // compute merged spans and cells to skip based on persisted mergedRange metadata
@@ -96,7 +112,8 @@ export default function CompanyDashboardAdmin() {
   const skipCells = new Set();
   if (sheet) {
     const indexMap = {};
-    for (let i = 0; i < sortedDashboard.length; i++) indexMap[sortedDashboard[i].period] = i;
+    for (let i = 0; i < sortedDashboard.length; i++)
+      indexMap[sortedDashboard[i].period] = i;
     for (let i = 0; i < sortedDashboard.length; i++) {
       const row = sortedDashboard[i];
       for (const head of heads) {
@@ -115,7 +132,8 @@ export default function CompanyDashboardAdmin() {
           const startPeriod = sortedDashboard[start].period;
           const key = `${startPeriod}|${head}|${service}`;
           mergeSpanMap[key] = count;
-          for (let k = start + 1; k <= end; k++) skipCells.add(`${sortedDashboard[k].period}|${head}|${service}`);
+          for (let k = start + 1; k <= end; k++)
+            skipCells.add(`${sortedDashboard[k].period}|${head}|${service}`);
         }
       }
     }
@@ -394,50 +412,61 @@ export default function CompanyDashboardAdmin() {
                       {heads.flatMap((head) =>
                         sheet.serviceHeads[head]?.length
                           ? sheet.serviceHeads[head].map((service) => {
-                            const skipKey = `${row.period}|${head}|${service}`;
-                            if (skipCells.has(skipKey)) return null;
+                              const skipKey = `${row.period}|${head}|${service}`;
+                              if (skipCells.has(skipKey)) return null;
 
-                            const cell = row.services?.[service]?.[head] || {
-                              symbol: "",
-                            };
-                            const symbolObj = symbols.find(
-                              (s) => s.key === cell.symbol
-                            );
+                              const cell = row.services?.[service]?.[head] || {
+                                symbol: "",
+                              };
+                              const symbolObj = symbols.find(
+                                (s) => s.key === cell.symbol
+                              );
 
-                            const spanKey = `${row.period}|${head}|${service}`;
-                            const computedSpan = mergeSpanMap[spanKey];
-                            const rowSpan = computedSpan && computedSpan > 1 ? computedSpan : undefined;
+                              const spanKey = `${row.period}|${head}|${service}`;
+                              const computedSpan = mergeSpanMap[spanKey];
+                              const rowSpan =
+                                computedSpan && computedSpan > 1
+                                  ? computedSpan
+                                  : undefined;
 
-                            return (
-                              <td
-                                key={`${row.period}_${head}_${service}`}
-                                {...(rowSpan ? { rowSpan } : {})}
-                                className="border px-2 py-1 cursor-pointer text-center relative"
-                                onClick={(e) => {
-                                  if (!editMode) return;
-                                  if (cell.symbol) return; // ❌ cannot change once set
-                                  openPopup(e, row.period, service, head);
-                                }}
-                                onDoubleClick={() => {
-                                  if (editMode) return;
-                                  if (!cell.symbol) return; // ❌ empty -> no subsheet
-                                  openSubSheet(row.period, service, head);
-                                }}
-                              >
-                                <div className="text-xl">
-                                  {symbolObj?.label || ""}
-                                </div>
-                              </td>
-                            );
-                          })
+                              return (
+                                <td
+                                  key={`${row.period}_${head}_${service}`}
+                                  {...(rowSpan ? { rowSpan } : {})}
+                                  className="border px-2 py-1 cursor-pointer text-center relative"
+                                  onClick={(e) => {
+                                    if (!editMode) return;
+                                    if (cell.symbol) return; // ❌ cannot change once set
+                                    openPopup(e, row.period, service, head);
+                                  }}
+                                  onDoubleClick={() => {
+                                    if (editMode) return;
+                                    if (!cell.symbol) return; // ❌ empty -> no subsheet
+                                    openSubSheet(row.period, service, head);
+                                  }}
+                                >
+                                  <div
+                                    className="text-xl"
+                               title={
+  cell?.updatedAt
+    ? `Updated: ${formatTimestamp(cell.updatedAt)}`
+    : "Not updated"
+}
+
+                                  >
+                                    {symbolObj?.label || ""}
+                                  </div>
+                                </td>
+                              );
+                            })
                           : [
-                            <td
-                              key={`${row.period}_${head}_empty`}
-                              className="border px-2 py-1 text-center"
-                            >
-                              -
-                            </td>,
-                          ]
+                              <td
+                                key={`${row.period}_${head}_empty`}
+                                className="border px-2 py-1 text-center"
+                              >
+                                -
+                              </td>,
+                            ]
                       )}
                     </tr>
                   ))}
