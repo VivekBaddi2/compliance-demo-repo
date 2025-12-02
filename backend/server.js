@@ -3,25 +3,22 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import mongooseConnection from "./mongo.js";
 import appRoutes from "./routes/index.js";
-import fs from "fs";
 import dotenv from "dotenv";
-import https from "https";
 import { startTaskScheduler } from "./controllers/taskScheduler.js";
 
 dotenv.config();
 
-
 const port = process.env.PORT || 4000;
 const app = express();
 
-
+// Middleware
 app.use(bodyParser.json({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-
+// DB Connection
 mongooseConnection();
 
-
+// CORS
 app.use(
   cors({
     origin: "*",
@@ -30,33 +27,20 @@ app.use(
   })
 );
 
+// Health Check
 app.get("/health", (req, res) => {
   return res.status(200).json({
     msg: "Server is up and running",
   });
 });
 
-
+// Routes
 app.use("/api", appRoutes);
 
+// Task Scheduler
 startTaskScheduler();
 
-if (process.env.DEPLOY_ENV === "local") {
-  app.listen(4000, (req, res) => {
-    console.log(`Server is listening on port ${port}`);
-  });
-
-} else if (process.env.DEPLOY_ENV === "prod") {
-  const httpsServer = https.createServer(
-    {
-      cert: fs.readFileSync(process.env.SSL_CRT_PATH),
-      key: fs.readFileSync(process.env.SSL_KEY_PATH),
-    },
-    app
-  );
-
-  
-  httpsServer.listen(4000, () => {
-    console.log("HTTPS Server running on port 443");
-  });
-}
+// Start Server — works for both local & Render
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
