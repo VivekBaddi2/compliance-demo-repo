@@ -3,6 +3,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import ClientSheets from "../components/ClientSheets";
 import AssignTaskModal from "../components/AssignTaskModal";
+import { API_URL } from "../api";
 
 export default function SuperAdminDashboard() {
   const [activeTab, setActiveTab] = useState("admins");
@@ -88,14 +89,14 @@ export default function SuperAdminDashboard() {
 
   const fetchAdmins = async () => {
     const res = await axios.get(
-      "http://localhost:4000/api/superadmin/adminsWithCompanies"
+      `${API_URL}/api/superadmin/adminsWithCompanies`
     );
     setAdmins(res.data.data);
   };
 
   const fetchCompanies = async () => {
     const res = await axios.get(
-      "http://localhost:4000/api/superadmin/companiesWithAdmins"
+      `${API_URL}/api/superadmin/companiesWithAdmins`
     );
     setCompanies(res.data.data);
   };
@@ -120,7 +121,7 @@ export default function SuperAdminDashboard() {
       try {
         // Call dedicated API to remove company from admin
         await axios.delete(
-          `http://localhost:4000/api/superadmin/removeCompany/${adminId}/${companyId}`
+          `${API_URL}/api/superadmin/removeCompany/${adminId}/${companyId}`
         );
 
         Swal.fire(
@@ -144,7 +145,7 @@ export default function SuperAdminDashboard() {
       return;
     }
     try {
-      await axios.post("http://localhost:4000/api/superadmin/createAdmin", {
+      await axios.post(`${API_URL}/api/superadmin/createAdmin`, {
         ...newAdmin,
         createdBy: JSON.parse(localStorage.getItem("superAdmin"))._id,
       });
@@ -170,7 +171,7 @@ export default function SuperAdminDashboard() {
     if (result.isConfirmed) {
       try {
         await axios.delete(
-          `http://localhost:4000/api/superadmin/deleteAdmin/${id}`
+          `${API_URL}/api/superadmin/deleteAdmin/${id}`
         );
         Swal.fire("Deleted!", "Admin has been deleted.", "success");
         fetchAdmins();
@@ -217,7 +218,7 @@ export default function SuperAdminDashboard() {
     if (formValues) {
       try {
         await axios.put(
-          `http://localhost:4000/api/superadmin/update-admin/${admin._id}`,
+          `${API_URL}/api/superadmin/update-admin/${admin._id}`,
           formValues
         );
 
@@ -240,7 +241,7 @@ export default function SuperAdminDashboard() {
     }
     try {
       await axios.post(
-        "http://localhost:4000/api/superadmin/createCompany",
+        `${API_URL}/api/superadmin/createCompany`,
         newCompany
       );
       Swal.fire("Success", "Company added successfully", "success");
@@ -282,7 +283,7 @@ export default function SuperAdminDashboard() {
     if (result.isConfirmed) {
       try {
         await axios.delete(
-          `http://localhost:4000/api/superadmin/deleteCompany/${id}`
+          `${API_URL}/api/superadmin/deleteCompany/${id}`
         );
         Swal.fire("Deleted!", "Company has been deleted.", "success");
         fetchCompanies();
@@ -355,7 +356,7 @@ export default function SuperAdminDashboard() {
     if (formValues) {
       try {
         await axios.put(
-          `http://localhost:4000/api/superadmin/update-company/${company._id}`,
+          `${API_URL}/api/superadmin/update-company/${company._id}`,
           formValues
         );
         Swal.fire("Success", "Company updated successfully", "success");
@@ -373,7 +374,7 @@ export default function SuperAdminDashboard() {
       return;
     }
     try {
-      await axios.post("http://localhost:4000/api/superadmin/assignCompanies", {
+      await axios.post(`${API_URL}/api/superadmin/assignCompanies`, {
         adminId: selectedAdmin,
         companyIds: selectedCompanies,
       });
@@ -394,7 +395,7 @@ export default function SuperAdminDashboard() {
     }
     try {
       await axios.post(
-        "http://localhost:4000/api/superadmin/reallotCompanies",
+        `${API_URL}/api/superadmin/reallotCompanies`,
         {
           fromAdminId: fromAdmin,
           toAdminId: toAdmin,

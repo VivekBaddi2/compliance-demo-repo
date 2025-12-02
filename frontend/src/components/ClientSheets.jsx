@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { API_URL } from "../api";
 
 export default function ClientSheets() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function ClientSheets() {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:4000/api/company/getAll");
+      const res = await axios.get(`${API_URL}/api/company/getAll`);
       setClients(res.data.data);
     } catch (err) {
       console.error(err);

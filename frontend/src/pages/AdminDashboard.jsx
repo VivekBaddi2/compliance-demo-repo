@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { API_URL } from "../api";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const res = await axios.get(
-        `http://localhost:4000/api/company/getByAdmin/${admin._id}`
+        `${API_URL}/api/company/getByAdmin/${admin._id}`
       );
       setCompanies(res.data?.data || []);
     } catch (err) {
@@ -79,7 +80,7 @@ export default function AdminDashboard() {
     try {
       setLoadingView(true);
       const res = await axios.get(
-        `http://localhost:4000/api/company/view/${companyId}`
+        `${API_URL}/api/company/view/${companyId}`
       );
       setViewCompany(res.data.data);
       setShowModal(true);

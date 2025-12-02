@@ -1,2 +1,2 @@
-export const API_URL = "http://localhost:4000/api";
+export const API_URL = "https://compliance-demo-repo.onrender.com/" || "http://localhost:4000/api";
 

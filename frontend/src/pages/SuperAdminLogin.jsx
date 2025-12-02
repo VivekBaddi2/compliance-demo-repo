@@ -14,7 +14,7 @@ export default function SuperAdminLogin() {
 
     try {
       const response = await axios.post(
-        "http://localhost:4000/api/superadmin/login",
+        `${API_URL}/api/superadmin/login`,
         { username, password }
       );
 
