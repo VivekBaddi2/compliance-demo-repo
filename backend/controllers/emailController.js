@@ -3,7 +3,7 @@
 import transporter, { sendMail } from "../config/mail.js";
 import { generateReportPdf } from "../config/reportPdf.js";
 import fs from "fs";
-import Report from "../schemas/reportSchema.js"; // adjust casing/path if needed
+import Report from "../schemas/ReportSchema.js"; // adjust casing/path if needed
 
 console.log("Loaded: controllers/emailController.js");
 
