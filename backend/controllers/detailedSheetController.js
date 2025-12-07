@@ -8,7 +8,7 @@ export const createSubSheet = asyncHandler(async (req, res) => {
 
   // Create empty grid
   const emptyGrid = Array.from({ length: rowCount }, () =>
-    Array.from({ length: colCount }, () => ({ value: "nine" }))
+    Array.from({ length: colCount }, () => ({ value: "" }))
   );
 
   // Create default column names: Col 1, Col 2, ...
@@ -63,7 +63,7 @@ export const getSubSheet = asyncHandler(async (req, res) => {
 // @desc Update subsheet - heading, rows, columns, cells
 // @route PUT /api/subsheets/:id
 export const updateSubSheet = asyncHandler(async (req, res) => {
-  const { heading, rows, columns } = req.body; // include columns
+  const { heading, rows, columns, cellUpdate, fy } = req.body; // include columns and fy
 
   const sheet = await SubSheet.findById(req.params.id);
   if (!sheet) {
@@ -74,11 +74,26 @@ export const updateSubSheet = asyncHandler(async (req, res) => {
   if (heading !== undefined) sheet.heading = heading;
   if (rows !== undefined) sheet.rows = rows;
   if (columns !== undefined && Array.isArray(columns)) sheet.columns = columns; // update column names
+  if (fy !== undefined) sheet.fy = fy;
+
+  if (Array.isArray(cellUpdate) && cellUpdate.length > 0) {
+    for (const edit of cellUpdate) {
+      const { rowIndex, cellIndex, isEdited, value } = edit;
+      // Apply updates
+      if (sheet.rows[rowIndex][cellIndex].value == "")
+        sheet.rows[rowIndex][cellIndex].isEdited = false;
+      else
+        sheet.rows[rowIndex][cellIndex].isEdited = isEdited;
+
+
+    }
+  }
 
   const updated = await sheet.save();
 
   res.json({ success: true, data: updated });
 });
+
 
 // @desc Add a new row
 // @route PUT /api/subsheets/:id/rows/add
@@ -173,4 +188,29 @@ export const deleteSubSheet = asyncHandler(async (req, res) => {
   await sheet.deleteOne();
 
   res.json({ success: true, message: "Subsheet deleted" });
+});
+
+export const updateDueDate = asyncHandler(async (req, res) => {
+  const { sheetId } = req.params;
+  const { dueDate, role } = req.body;  // role = admin or superadmin
+
+  const sheet = await SubSheet.findById(sheetId);
+  if (!sheet) return res.status(404).json({ message: "Sheet not found" });
+
+  // ADMIN CAN SET ONLY IF EMPTY
+  if (role === "admin") {
+    if (sheet.dueDate) {
+      return res.status(403).json({
+        message: "Admin cannot update due date after it's set once",
+      });
+    }
+  }
+
+  sheet.dueDate = dueDate;
+  await sheet.save();
+
+  return res.json({
+    message: "Due date updated successfully",
+    data: sheet,
+  });
 });

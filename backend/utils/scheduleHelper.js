@@ -1,14 +1,22 @@
 import { endOfMonth } from "date-fns";
 
 /**
- * Decide if task is due on checkDate (Date object)
+ * Decide if task is due on checkDate (Date object in IST)
  * - Uses startDate and frequency.
- * - If day-of-month > days in checkDate's month -> use last day of month.
+ * - If startDate day > days in checkDate’s month → fallback to last day of that month.
  */
 export const isTaskDueOnDate = (task, checkDate) => {
   if (!task || !task.startDate) return false;
 
-  const start = new Date(task.startDate);
+  // Convert both dates into IST "date-only" objects
+  const start = new Date(
+    new Date(task.startDate).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+  );
+
+  const todayIST = new Date(
+    checkDate.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+  );
+
   const freqMap = {
     Monthly: 1,
     Quarterly: 3,
@@ -19,24 +27,28 @@ export const isTaskDueOnDate = (task, checkDate) => {
   const stepMonths = freqMap[task.frequency];
   if (!stepMonths) return false;
 
-  // normalize times to date-only
-  const checkY = checkDate.getFullYear();
-  const checkM = checkDate.getMonth(); // 0-based
-  const checkD = checkDate.getDate();
+  // extract IST date parts
+  const checkY = todayIST.getFullYear();
+  const checkM = todayIST.getMonth();
+  const checkD = todayIST.getDate();
 
-  // find the day-of-month we intend to send based on startDate
   const desiredDay = start.getDate();
 
-  // compute the number of months between start and checkDate
-  const monthsBetween = (checkY - start.getFullYear()) * 12 + (checkM - start.getMonth());
-  if (monthsBetween < 0) return false; // checkDate before start
+  // months difference
+  const monthsBetween =
+    (checkY - start.getFullYear()) * 12 +
+    (checkM - start.getMonth());
 
-  // task is due only when monthsBetween % stepMonths === 0
+  if (monthsBetween < 0) return false; // checkDate before startDate
+
   if (monthsBetween % stepMonths !== 0) return false;
 
-  // compute the day-of-month available in check month
-  const lastDayOfCheckMonth = endOfMonth(checkDate).getDate();
-  const actualDay = Math.min(desiredDay, lastDayOfCheckMonth);
+  // last day of this month
+  const lastDayOfMonth = endOfMonth(todayIST).getDate();
 
+  // task day must be either "desired" or last day if overflowed
+  const actualDay = Math.min(desiredDay, lastDayOfMonth);
+
+  // final check
   return checkD === actualDay;
 };

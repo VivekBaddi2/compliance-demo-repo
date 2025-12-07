@@ -1,5 +1,21 @@
 import mongoose from "mongoose";
 
+const directorSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  din: { type: String },
+  pan: { type: String },
+  dob: { type: Date },
+  mobile: { type: String },
+  email: { type: String },
+});
+
+const authorisedPersonSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  din: { type: String },
+  pan: { type: String },
+  dob: { type: Date },
+});
+
 const companySchema = new mongoose.Schema({
   clientName: {                     
     type: String,
@@ -14,7 +30,7 @@ const companySchema = new mongoose.Schema({
   cin: { type: String },
   pan: { type: String },
   gst: { type: String },
-  dateOfIncorporation: { type: Date }, // date field
+  dateOfIncorporation: { type: Date },
   address: { type: String },
   phone: { type: String },
   email: { type: String },
@@ -24,11 +40,25 @@ const companySchema = new mongoose.Schema({
   esi: { type: String },
   ptEmployer: { type: String },
   ptEmployee: { type: String },
+
+  // ✅ New: Multiple Directors
+  directors: {
+    type: [directorSchema],
+    default: [],
+  },
+
+  // ✅ New: Multiple Authorised Persons
+  authorisedPersons: {
+    type: [authorisedPersonSchema],
+    default: [],
+  },
+
   adminId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Admin",
     default: null,
   },
+
 }, { timestamps: true });
 
 const Company = mongoose.model("Company", companySchema);

@@ -5,6 +5,8 @@ import companyRouter from "./companyRoutes.js";
 import dashboardRouter from "./dashboardRoutes.js";
 import detailedSheetRouter from "./detailedSheetRoutes.js";
 import taskRouter from "./taskRoutes.js"
+import emailRouter from "./emailRoutes.js";
+
 
 const router = expressRouter();
 
@@ -14,5 +16,6 @@ router.use("/company", companyRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/dsheet", detailedSheetRouter);
 router.use("/tasks", taskRouter);
+router.use("/email", emailRouter);
 
 export default router;

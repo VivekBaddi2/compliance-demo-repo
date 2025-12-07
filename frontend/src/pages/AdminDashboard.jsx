@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { API_URL } from "../api";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -34,7 +33,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const res = await axios.get(
-        `${API_URL}/api/company/getByAdmin/${admin._id}`
+        `http://localhost:4000/api/company/getByAdmin/${admin._id}`
       );
       setCompanies(res.data?.data || []);
     } catch (err) {
@@ -62,6 +61,7 @@ export default function AdminDashboard() {
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.removeItem("admin");
+        localStorage.removeItem("userType");
         localStorage.removeItem("companyLoggedIn");
         navigate("/");
         window.location.reload();
@@ -80,7 +80,7 @@ export default function AdminDashboard() {
     try {
       setLoadingView(true);
       const res = await axios.get(
-        `${API_URL}/api/company/view/${companyId}`
+        `http://localhost:4000/api/company/view/${companyId}`
       );
       setViewCompany(res.data.data);
       setShowModal(true);
@@ -158,50 +158,50 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
- {/* Modal for company details */}
-{showModal && viewCompany && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 p-4">
-    <div className="bg-white p-6 rounded-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto relative shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">
-        Company Details {loadingView && "..."}
-      </h2>
-      <button
-        onClick={closeModal}
-        className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 font-bold text-2xl"
-      >
-        ×
-      </button>
+      {/* Modal for company details */}
+      {showModal && viewCompany && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 p-4">
+          <div className="bg-white p-6 rounded-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto relative shadow-lg">
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">
+              Company Details {loadingView && "..."}
+            </h2>
+            <button
+              onClick={closeModal}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 font-bold text-2xl"
+            >
+              ×
+            </button>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-200 rounded-lg">
-          <tbody>
-            {Object.entries(viewCompany)
-              .filter(
-                ([key]) =>
-                  !["_id", "admin", "adminID", "createdAt", "updatedAt"].includes(
-                    key
-                  )
-              )
-              .map(([key, value]) => (
-                <tr key={key} className="border-b last:border-b-0">
-                  <td className="px-4 py-3 font-semibold text-gray-700 bg-gray-50 w-1/3">
-                    {formatKey(key)}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 break-words">
-                    {typeof value === "boolean"
-                      ? value
-                        ? "Yes"
-                        : "No"
-                      : value?.toString()}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-)}
+            <div className="overflow-x-auto">
+              <table className="min-w-full border border-gray-200 rounded-lg">
+                <tbody>
+                  {Object.entries(viewCompany)
+                    .filter(
+                      ([key]) =>
+                        !["_id", "admin", "adminID", "createdAt", "updatedAt"].includes(
+                          key
+                        )
+                    )
+                    .map(([key, value]) => (
+                      <tr key={key} className="border-b last:border-b-0">
+                        <td className="px-4 py-3 font-semibold text-gray-700 bg-gray-50 w-1/3">
+                          {formatKey(key)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 break-words">
+                          {typeof value === "boolean"
+                            ? value
+                              ? "Yes"
+                              : "No"
+                            : value?.toString()}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

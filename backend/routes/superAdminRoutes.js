@@ -5,6 +5,7 @@ import {
   updateSuperAdmin,
   deleteSuperAdmin,
   loginSuperAdmin,
+  loginUser,
   createAdminBySuperAdmin,
   createCompanyBySuperAdmin,
   assignCompaniesToAdmin,
@@ -28,7 +29,7 @@ router.get("/findAll", getAllSuperAdmins);
 router.put("/update/:id", updateSuperAdmin);
 router.delete("/delete/:id", deleteSuperAdmin);
 router.post("/login", loginSuperAdmin);
-
+router.post("/loginUser", loginUser);
 // -------------------------
 // Admin & Company Management
 // -------------------------

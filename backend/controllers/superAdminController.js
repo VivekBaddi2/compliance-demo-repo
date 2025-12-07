@@ -26,6 +26,54 @@ export const createSuperAdmin = asyncHandler(async (req, res) => {
   });
 });
 
+export const loginUser = asyncHandler(async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ message: "Username and password are required" });
+  }
+
+  // 1) Try Super Admin
+  let user = await SuperAdmin.findOne({ username });
+
+  if (user) {
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    return res.status(200).json({
+      role: "super-admin",
+      user: {
+        _id: user._id,
+        username: user.username,
+        role: "super-admin",
+      },
+    });
+  }
+
+  // 2) Try Admin
+  user = await Admin.findOne({ username });
+
+  if (user) {
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    return res.status(200).json({
+      role: "admin",
+      user: {
+        _id: user._id,
+        username: user.username,
+        role: "admin",
+      },
+    });
+  }
+
+  return res.status(404).json({ message: "User not found" });
+});
+
 export const getAllSuperAdmins = asyncHandler(async (req, res) => {
   const admins = await SuperAdmin.find()
     .populate({
@@ -121,7 +169,9 @@ export const createCompanyBySuperAdmin = asyncHandler(async (req, res) => {
     esi,
     ptEmployer,
     ptEmployee,
-    adminId
+    adminId,
+    directors,               // NEW
+    authorisedPersons        // NEW
   } = req.body;
 
   if (!clientName || !structure) {
@@ -150,6 +200,9 @@ export const createCompanyBySuperAdmin = asyncHandler(async (req, res) => {
     ptEmployer,
     ptEmployee,
     adminId: adminId || null,
+
+    directors: directors || [],                 // NEW
+    authorisedPersons: authorisedPersons || []  // NEW
   });
 
   res.status(201).json({ success: true, msg: "Company created", data: company });
@@ -199,7 +252,7 @@ export const getAllAdminsWithCompanies = asyncHandler(async (req, res) => {
 
 export const getAllCompaniesWithAdmins = asyncHandler(async (req, res) => {
   // Populate adminId with username or other admin fields as needed
-  const companies = await Company.find().populate("adminId", "username"); 
+  const companies = await Company.find().populate("adminId", "username");
   res.status(200).json({ success: true, data: companies });
 });
 
@@ -291,6 +344,7 @@ export const updateAdminBySuperAdmin = asyncHandler(async (req, res) => {
 // Update company (SuperAdmin)
 export const updateCompanyBySuperAdmin = asyncHandler(async (req, res) => {
   const { companyId } = req.params;
+
   const {
     clientName,
     structure,
@@ -307,13 +361,17 @@ export const updateCompanyBySuperAdmin = asyncHandler(async (req, res) => {
     esi,
     ptEmployer,
     ptEmployee,
-    adminId
+    adminId,
+    directors,                // NEW
+    authorisedPersons         // NEW
   } = req.body;
 
   const company = await Company.findById(companyId);
-  if (!company) return res.status(404).json({ success: false, msg: "Company not found" });
+  if (!company) {
+    return res.status(404).json({ success: false, msg: "Company not found" });
+  }
 
-  // Update fields if provided
+  // Update fields
   if (clientName) company.clientName = clientName;
   if (structure) company.structure = structure;
   if (cin) company.cin = cin;
@@ -330,6 +388,12 @@ export const updateCompanyBySuperAdmin = asyncHandler(async (req, res) => {
   if (ptEmployer) company.ptEmployer = ptEmployer;
   if (ptEmployee) company.ptEmployee = ptEmployee;
   if (adminId) company.adminId = adminId;
+
+  // NEW — replace entire directors array
+  if (directors) company.directors = directors;
+
+  // NEW — replace entire authorised persons array
+  if (authorisedPersons) company.authorisedPersons = authorisedPersons;
 
   await company.save();
 

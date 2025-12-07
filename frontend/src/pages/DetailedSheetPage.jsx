@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { API_URL } from "../api";
 
-
-const API = `${API_URL}/api/dsheet`;
+const API = "http://localhost:4000/api/dsheet";
 
 export default function SubSheetManager() {
   const [sheets, setSheets] = useState([]);

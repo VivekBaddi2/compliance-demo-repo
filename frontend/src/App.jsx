@@ -1,12 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
-import SuperAdminLogin from "./pages/SuperAdminLogin";
-import AdminLogin from "./pages/AdminLogin";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SubSheetPage from "./pages/SubSheetPage";
 import SendReportsPage from "./pages/SendReportsPage";
 import SubSheetManager from "./pages/DetailedSheetPage";
+import LoginPage from "./pages/LoginPage";
 
 // Company pages
 import CompanyDashboardSuperAdmin from "./pages/CompanyDashboardSuperAdmin";
@@ -19,12 +18,9 @@ export default function App() {
         {/* Landing Page */}
         <Route path="/" element={<LandingPage />} />
 
-        {/* Super Admin Login */}
-        <Route path="/login/super-admin" element={<SuperAdminLogin />} />
-
-        {/* Admin Login */}
-        <Route path="/login/admin" element={<AdminLogin />} />
-
+        {/* Common login page */}
+        <Route path="/LoginPage" element={<LoginPage />} />
+        
         {/* Super Admin Dashboard */}
         <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
 

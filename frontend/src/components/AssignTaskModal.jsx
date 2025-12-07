@@ -71,7 +71,7 @@ export default function AssignTaskModal({ open, onClose, admin }) {
     };
 
     return (
-        <div className="assign-task-modal fixed inset-0 z-50 flex items-center justify-center">
+        <div className="assign-task-modal fixed inset-0 z-50 flex items-center justify-center ">
             <div className="overlay absolute inset-0 bg-black opacity-50" onClick={() => onClose(false)} />
             <div className="modal-container relative bg-gray-900 text-white rounded-lg p-6 w-full max-w-lg z-10 shadow-lg">
                 <h3 className="text-xl mb-3">Assign Task to {admin?.name || admin?.username || admin?.email}</h3>

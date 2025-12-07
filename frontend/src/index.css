@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root{
+    --bg-primary: #f9f9f9;
+    --bg-secondary: #ffffff;
+    --main-color: #007aff;
+    --text-color-primary: #007aff;
+    --text-color-secondary: #ffffff;
+    --text-color-gray: darkgray ;
+    --border-color-primary: #007aff;
+    --button-hover-color: #0075f2;
+    --sub-button-color: #007bff20;
+    --button-signout-bg: #ff131325;
+    --button-signout-bg-hover: #ff131330;
+    --button-signout-text: #ff1313;
+
+    --animation-color: #0075f2;
+}
